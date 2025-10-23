@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 class ModelDef(BaseModel):
     id: str = Field(..., description="Model identifier (e.g., 'gpt-4o-mini')")
@@ -9,6 +9,7 @@ class ModelDef(BaseModel):
     meta: Dict[str, Any] = Field(default_factory=dict)
 
 class Block(BaseModel):
+    model_config = ConfigDict(extra='allow')
     type: str
     exec: int | None = 1
     model: Optional[str] = None

@@ -232,24 +232,75 @@ async function importYamlText(text) {
     });
     const data = await res.json();
     if (!res.ok) {
-      alert('Import failed: ' + (data.error || res.statusText));
+      const detail = (data && (data.message || data.error)) ? (data.message || data.error) : res.statusText;
+      alert('Import failed: ' + detail);
       return;
     }
     const st = (data && typeof data === 'object' && 'state' in data) ? data.state : data;
+
+    // 旧状態から「exec列ごとの順序」で座標とIDを継承
+    const prevBlocks = Array.isArray(state.blocks) ? state.blocks : [];
+    const prevByExec = new Map();
+    prevBlocks.forEach(b => {
+      const ex = b.exec || 1;
+      if (!prevByExec.has(ex)) prevByExec.set(ex, []);
+      prevByExec.get(ex).push(b);
+    });
+    const idxByExec = new Map();
+    const importedBlocks = Array.isArray(st.blocks) ? st.blocks : [];
+
+    // 新規ID採番の開始位置は旧ブロック群から算出
+    let nextId = nextIdFromBlocks(prevBlocks);
+
+    const newBlocks = importedBlocks.map(b => {
+      const bb = JSON.parse(JSON.stringify(b || {}));
+      const ex = bb.exec || 1;
+      const list = prevByExec.get(ex) || [];
+      const idx = idxByExec.get(ex) || 0;
+      const prev = list[idx];
+      idxByExec.set(ex, idx + 1);
+
+      // 位置継承（あれば）
+      if (prev && prev.position && Number.isFinite(prev.position.x) && Number.isFinite(prev.position.y)) {
+        bb.position = { x: prev.position.x, y: prev.position.y };
+      }
+
+      // ID継承（あれば）。なければ新規採番。
+      bb.id = (prev && prev.id) ? prev.id : ('b' + nextId++);
+
+      // UIタイトル補完（name等があればtitleに反映）
+      if (!bb.title && bb.name) bb.title = bb.name;
+
+      return bb;
+    });
+
+    // モデルはそのまま置換
     state.models = Array.isArray(st.models) ? st.models : [];
-    state.blocks = Array.isArray(st.blocks) ? st.blocks : [];
+
+    // ブロック反映
+    state.blocks = newBlocks;
     state.idCounter = nextIdFromBlocks(state.blocks);
 
+    // 配線からexecを再計算（位置は維持）
     autoAssignExecFromEdges();
-    autolayoutByExec();
+
+    // 未配置のものだけ自動整列（既存座標は触らない）
+    autolayoutByExec({ onlyUnset: true });
 
     renderModelsPanel();
     renderNodes();
+    // SVGサイズとビューを同期してから配線描画（描画欠落対策）
+    if (typeof syncSvgToCanvas === 'function') syncSvgToCanvas();
+    if (typeof applyViewport === 'function') applyViewport();
     drawConnections();
 
     const yamlModal = document.getElementById('yamlModal');
     if (typeof yamlPreview !== 'undefined' && yamlPreview) {
-      yamlPreview.value = text;
+      try {
+        yamlPreview.value = toYAML(state);
+      } catch (e) {
+        yamlPreview.value = text;
+      }
     }
     if (yamlModal && typeof yamlModal.showModal === 'function') {
       yamlModal.showModal();

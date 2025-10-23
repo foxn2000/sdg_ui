@@ -50,8 +50,8 @@ function openEditor(b) {
     if (b.type === 'python') readPythonFormInto(b);
     if (b.type === 'end') readEndFormInto(b);
 
+    // 保存時はレイアウトを変更しない（位置維持）
     autoAssignExecFromEdges();
-    autolayoutByExec();
 
     renderNodes();
     drawConnections();

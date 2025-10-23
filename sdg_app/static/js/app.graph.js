@@ -23,6 +23,13 @@ function prettyName(name){
 }
 
 function drawConnections() {
+  // SVGサイズが未同期/キャンバス未レイアウト時の描画抜け対策
+  if (typeof syncSvgToCanvas === 'function') syncSvgToCanvas();
+  if (!canvas || canvas.clientWidth < 2 || canvas.clientHeight < 2) {
+    if (typeof raf === 'function') raf(drawConnections);
+    return;
+  }
+
   clearWires();
 
   const edges = computeEdges();
@@ -39,14 +46,14 @@ function drawConnections() {
     const fr = {
       x: (fromBlock.position?.x ?? 0),
       y: (fromBlock.position?.y ?? 0),
-      w: fromEl.offsetWidth,
-      h: fromEl.offsetHeight
+      w: Math.max(1, fromEl.offsetWidth || 260),
+      h: Math.max(1, fromEl.offsetHeight || 160)
     };
     const tr = {
       x: (toBlock.position?.x ?? 0),
       y: (toBlock.position?.y ?? 0),
-      w: toEl.offsetWidth,
-      h: toEl.offsetHeight
+      w: Math.max(1, toEl.offsetWidth || 260),
+      h: Math.max(1, toEl.offsetHeight || 160)
     };
 
     const x1 = fr.x + fr.w - 6;
@@ -184,7 +191,9 @@ function contentBounds() {
 }
 
 /** 列ごとに垂直センタリング（ズーム倍率を反映） */
-function autolayoutByExec() {
+function autolayoutByExec(options = {}) {
+  const onlyUnset = !!options.onlyUnset;
+
   const cRect = canvas.getBoundingClientRect();
   const worldH = cRect.height / viewport.s; // ★ズーム考慮
   const marginX = 80;
@@ -200,14 +209,43 @@ function autolayoutByExec() {
   execs.forEach(ex => byExec.set(ex, state.blocks.filter(b => (b.exec||1) === ex)));
 
   byExec.forEach((list, ex) => {
-    const n = list.length;
-    const colHeight = n * rowH + (n - 1) * marginY;
-    const startY = Math.max(32, Math.round((worldH - colHeight) / 2));
-    list.forEach((b, idx) => {
-      const x = xMap.get(ex);
-      const y = startY + idx * (rowH + marginY);
-      b.position = snap({x, y});
-    });
+    const x = xMap.get(ex);
+
+    if (!onlyUnset) {
+      // 既存挙動: 列全体を再配置（中央寄せ）
+      const n = list.length;
+      const colHeight = n * rowH + (n - 1) * marginY;
+      const startY = Math.max(32, Math.round((worldH - colHeight) / 2));
+      list.forEach((b, idx) => {
+        const y = startY + idx * (rowH + marginY);
+        b.position = snap({ x, y });
+      });
+      return;
+    }
+
+    // 追加挙動: 位置未設定のノードのみ自動配置（既存座標は維持）
+    const hasPos = (bb) => Number.isFinite(bb?.position?.x) && Number.isFinite(bb?.position?.y);
+    const existing = list.filter(b => hasPos(b)).sort((a, b) => (a.position.y - b.position.y));
+    const missing = list.filter(b => !hasPos(b));
+    if (missing.length === 0) return;
+
+    if (existing.length > 0) {
+      // 既存の最下段の直下から縦に積む
+      let y = existing.reduce((m, bb) => Math.max(m, bb.position.y), 0) + rowH + marginY;
+      missing.forEach((b) => {
+        b.position = snap({ x, y });
+        y += rowH + marginY;
+      });
+    } else {
+      // 既存がない列は、未配置ノードのみで中央寄せ
+      const n = missing.length;
+      const colHeight = n * rowH + (n - 1) * marginY;
+      const startY = Math.max(32, Math.round((worldH - colHeight) / 2));
+      missing.forEach((b, idx) => {
+        const y = startY + idx * (rowH + marginY);
+        b.position = snap({ x, y });
+      });
+    }
   });
 }
 

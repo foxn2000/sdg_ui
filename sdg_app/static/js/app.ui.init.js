@@ -275,6 +275,21 @@ function bindGlobalButtons() {
       drawConnections();
     };
   }
+
+  // YAML Apply: プレビューで編集した内容をそのまま取り込み（サーバで検証・反映）
+  const btnYamlApply = document.getElementById('btnYamlApply');
+  if (btnYamlApply) {
+    btnYamlApply.onclick = async () => {
+      try {
+        const text = yamlPreview ? yamlPreview.value : '';
+        if (!text || !text.trim()) { alert('YAMLが空です。'); return; }
+        await importYamlText(text);
+      } catch (e) {
+        console.error(e);
+        alert('Failed to apply YAML. See console for details.');
+      }
+    };
+  }
 }
 
 function bindImport() {

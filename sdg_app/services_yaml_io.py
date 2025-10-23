@@ -9,6 +9,21 @@ def yaml_to_state(text: str) -> Dict[str, Any]:
     blocks = data.get("blocks") or []
     connections = data.get("connections") or []
 
+    # Normalize models to include required 'id' for validation
+    if isinstance(models, list):
+        normalized_models: List[Dict[str, Any]] = []
+        for m in models:
+            if isinstance(m, dict):
+                out = dict(m)
+                mid = out.get("id") or out.get("name") or out.get("api_model")
+                if isinstance(mid, str) and mid.strip():
+                    out["id"] = str(mid)
+                    normalized_models.append(out)
+            elif isinstance(m, str):
+                normalized_models.append({"id": m})
+        if normalized_models:
+            models = normalized_models
+
     # If models are embedded in blocks only, derive unique model list
     if not models and isinstance(blocks, list):
         seen = set()

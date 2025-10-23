@@ -74,6 +74,13 @@
           <h2 id="hdr-models">AIモデル設定</h2>
           <button id="btnAddModel" class="accent" type="button">+ Add Model</button>
         </div>
+        <div class="panel-tools">
+          <button id="btnModelsSaveLocal" class="ghost" type="button" title="ブラウザに保存（ブロックへは影響しません）">Save</button>
+          <button id="btnModelsLoadLocal" class="ghost" type="button" title="ブラウザから読込（ブロックへは影響しません）">Load</button>
+          <button id="btnModelsReset" class="ghost danger" type="button" title="既定のモデル設定に戻す（ブロックは維持）">Reset</button>
+          <button id="btnModelsDownloadYAML" class="primary wide" type="button" title="モデル設定のみをYAML保存">Models YAML</button>
+        </div>
+        <div class="panel-note small-note">モデル設定のみの操作です（ブロックには影響しません）。</div>
         <div id="modelsList" class="models-list">
           <!-- JSで挿入 -->
         </div>

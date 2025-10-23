@@ -262,6 +262,58 @@ details.ghost-d[open] > .popover{
   display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid #eef1f4;
 }
 .panel-head h2{font-size:14px; margin:0}
+
+/* ---- Models panel tools ---- */
+.panel-tools{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:8px;
+  padding:10px 12px;
+  background: var(--panel-alt);
+  border-bottom:1px solid #eef1f4;
+}
+.panel-tools button{
+  width:100%;
+}
+.panel-tools .primary{
+  box-shadow: 0 6px 18px rgba(0,0,0,.08), 0 1px 0 rgba(255,255,255,.9) inset;
+}
+.panel-tools .ghost{
+  background:#ffffff;
+}
+
+/* ツールバー直下に少し間隔を設ける */
+.panel-tools + .models-list{
+  margin-top:6px;
+}
+
+/* 狭幅時は1カラムに */
+@media (max-width: 680px){
+  .panel-tools{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ツールバーのレイアウト調整（見やすさ向上） */
+.panel-tools .wide{ grid-column: 1 / -1; }
+.panel-tools .danger{
+  /* 緊急度は低めの視覚表現（派手さを抑えた境界線の強調） */
+  border-color:#e3c9c9;
+  box-shadow: 0 0 0 2px rgba(227,201,201,.22) inset;
+}
+.panel-tools .danger:hover{
+  box-shadow: 0 0 0 3px rgba(227,201,201,.3) inset, var(--shadow);
+}
+
+/* ツールバー補助説明とリストとの余白最適化 */
+.panel-tools + .panel-note{ margin-top: 6px; }
+.panel-note{
+  margin: 6px 12px 0;
+  padding-left: 10px;
+  border-left: 3px solid #eceff3;
+}
+.panel-note + .models-list{ margin-top: 8px; }
+
 .models-list details{
   border-top:1px solid #eef1f4;
   padding:10px 12px;

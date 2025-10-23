@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindLibraryDnD();
   bindGlobalButtons();
   bindImport();
+  bindModelTools();
   bindCanvasPanning();
   bindZooming();         // ズーム操作
   mountZoomHud();        // HUD
@@ -273,4 +274,59 @@ function bindImport() {
     const text = await f.text();
     await importYamlText(text);
   });
+}
+
+// -------------------------
+// Model Tools (Save/Load/Reset/Download)
+// -------------------------
+const LS_MODELS_KEY = 'mabel.models.json.v1';
+
+function bindModelTools() {
+  const btnSave = document.getElementById('btnModelsSaveLocal');
+  const btnLoad = document.getElementById('btnModelsLoadLocal');
+  const btnReset = document.getElementById('btnModelsReset');
+  const btnDownload = document.getElementById('btnModelsDownloadYAML');
+
+  if (btnSave) btnSave.onclick = () => {
+    try {
+      localStorage.setItem(LS_MODELS_KEY, JSON.stringify(state.models || []));
+      alert('Models saved to browser storage.');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save models to browser storage.');
+    }
+  };
+
+  if (btnLoad) btnLoad.onclick = () => {
+    try {
+      const raw = localStorage.getItem(LS_MODELS_KEY);
+      if (!raw) { alert('No saved models in browser storage.'); return; }
+      const parsed = JSON.parse(raw);
+      const models = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.models) ? parsed.models : []);
+      if (!Array.isArray(models)) { alert('Invalid models data in storage.'); return; }
+      state.models = models;
+      renderModelsPanel();
+      renderNodes();
+      drawConnections();
+      alert('Models loaded from browser storage.');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to load models from browser storage.');
+    }
+  };
+
+  if (btnReset) btnReset.onclick = () => {
+    if (!confirm('モデル設定をデフォルトに戻しますか？（ブロックには影響しません）')) return;
+    const keepBlocks = state.blocks;
+    bootstrapDefaults(); // resets models to defaults
+    state.blocks = keepBlocks; // keep blocks as-is
+    renderModelsPanel();
+    renderNodes();
+    drawConnections();
+  };
+
+  if (btnDownload) btnDownload.onclick = () => {
+    const yaml = toYAMLModels(state.models || []);
+    downloadText('models.yaml', yaml);
+  };
 }

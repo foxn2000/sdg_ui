@@ -178,6 +178,49 @@ function downloadText(filename, text) {
 }
 
 // -------------------------
+// Models-only YAML Export
+// -------------------------
+function toYAMLModels(stateOrModels) {
+  const models = Array.isArray(stateOrModels) ? stateOrModels : (stateOrModels && Array.isArray(stateOrModels.models) ? stateOrModels.models : []);
+  const lines = [];
+  const push = (s = '') => lines.push(s);
+
+  push('models:');
+  models.forEach(m => {
+    push(`  - name: ${yamlStr(m.name)}`);
+    push(`    api_model: ${yamlStr(m.api_model)}`);
+    push(`    api_key: ${yamlStr(m.api_key)}`);
+    if (m.base_url) push(`    base_url: ${yamlStr(m.base_url)}`);
+    if (m.organization) push(`    organization: ${yamlStr(m.organization)}`);
+    if (m.headers && Object.keys(m.headers).length) push(`    headers: ${dumpInlineObj(m.headers)}`);
+    const d = m.request_defaults || {};
+    const hasD = Object.keys(d).some(k => {
+      const v = d[k];
+      if (v === '' || v === undefined) return false;
+      if (typeof v === 'object') return Object.keys(v).length > 0;
+      return true;
+    });
+    if (hasD) {
+      push(`    request_defaults:`);
+      if (d.temperature !== undefined && d.temperature !== '') push(`      temperature: ${d.temperature}`);
+      if (d.top_p !== undefined && d.top_p !== '') push(`      top_p: ${d.top_p}`);
+      if (d.max_tokens !== undefined && d.max_tokens !== '') push(`      max_tokens: ${d.max_tokens}`);
+      if (d.timeout_sec !== undefined && d.timeout_sec !== '') push(`      timeout_sec: ${d.timeout_sec}`);
+      if (d.retry && (d.retry.max_attempts || d.retry.backoff)) {
+        push(`      retry:`);
+        if (d.retry.max_attempts !== undefined && d.retry.max_attempts !== '') push(`        max_attempts: ${d.retry.max_attempts}`);
+        if (d.retry.backoff && Object.keys(d.retry.backoff).length) {
+          push(`        backoff: ${dumpInlineObj(d.retry.backoff)}`);
+        }
+      }
+    }
+    push('');
+  });
+
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+// -------------------------
 // Import YAML via backend
 // -------------------------
 async function importYamlText(text) {
@@ -192,8 +235,9 @@ async function importYamlText(text) {
       alert('Import failed: ' + (data.error || res.statusText));
       return;
     }
-    state.models = Array.isArray(data.models) ? data.models : [];
-    state.blocks = Array.isArray(data.blocks) ? data.blocks : [];
+    const st = (data && typeof data === 'object' && 'state' in data) ? data.state : data;
+    state.models = Array.isArray(st.models) ? st.models : [];
+    state.blocks = Array.isArray(st.blocks) ? st.blocks : [];
     state.idCounter = nextIdFromBlocks(state.blocks);
 
     autoAssignExecFromEdges();

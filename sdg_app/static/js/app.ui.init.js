@@ -232,6 +232,7 @@ function bindGlobalButtons() {
   // YAMLプレビュー（モーダル表示）
   if (btnPreview) {
     btnPreview.onclick = () => {
+      autoAssignExecFromEdges();
       const yaml = toYAML(state);
       if (yamlPreview) yamlPreview.value = yaml;
       if (yamlModal && typeof yamlModal.showModal === 'function') {
@@ -244,6 +245,7 @@ function bindGlobalButtons() {
 
   // YAML生成（従来通りダウンロードもしつつ、プレビューも表示）
   el('#btnGenerate').onclick = () => {
+    autoAssignExecFromEdges();
     const yaml = toYAML(state);
     yamlPreview.value = yaml;
     if (yamlModal && typeof yamlModal.showModal === 'function') {

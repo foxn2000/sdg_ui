@@ -43,10 +43,31 @@ function toYAML(state) {
     push('');
   });
 
+  // 接続順（exec）とUI位置（y）を考慮した順序 + endを最後に
+  const blocksArr = Array.isArray(state.blocks) ? state.blocks.slice() : [];
+  const numFromId = (id) => {
+    const m = String(id || '').match(/^b(\d+)$/);
+    return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER;
+  };
+  const ordered = blocksArr.slice().sort((a, b) => {
+    const endA = a.type === 'end', endB = b.type === 'end';
+    if (endA !== endB) return endA ? 1 : -1; // endは常に最後
+    const exA = a.exec || 1, exB = b.exec || 1;
+    if (exA !== exB) return exA - exB; // トポロジカル順（exec昇順）
+    const yA = Number.isFinite(a?.position?.y) ? a.position.y : 0;
+    const yB = Number.isFinite(b?.position?.y) ? b.position.y : 0;
+    if (yA !== yB) return yA - yB;      // 見た目の上下で安定化
+    return numFromId(a.id) - numFromId(b.id); // 末尾の安定化
+  });
+  const numbering = new Map();
+  ordered.forEach((bb, i) => numbering.set(bb.id, i + 1));
+
   push('blocks:');
-  state.blocks.forEach(b => {
+  ordered.forEach(b => {
     push(`  - type: ${b.type}`);
     push(`    exec: ${b.exec || 1}`);
+    // YAML用の接続順ナンバー（1..N）を付与
+    push(`    no: ${numbering.get(b.id) || 0}`);
 
     if (b.type === 'ai') {
       if (b.model) push(`    model: ${yamlStr(b.model)}`); else push(`    # WARNING: model is empty`);

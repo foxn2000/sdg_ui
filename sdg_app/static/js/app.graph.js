@@ -294,6 +294,23 @@ function autoAssignExecFromEdges() {
     });
   }
 
+  // エンドブロックは常に最後のレベルに移動させる
+  const blockById = new Map(state.blocks.map(b => [b.id, b]));
+  let maxNonEnd = 0;
+  ids.forEach(id => {
+    const b = blockById.get(id);
+    if (!b) return;
+    const l = level.get(id) || 1;
+    if (b.type !== 'end') maxNonEnd = Math.max(maxNonEnd, l);
+  });
+  const endLevel = maxNonEnd + 1;
+  ids.forEach(id => {
+    const b = blockById.get(id);
+    if (b && b.type === 'end') {
+      level.set(id, Math.max(level.get(id) || 1, endLevel));
+    }
+  });
+
   state.blocks.forEach(b => {
     const newEx = level.get(b.id) || 1;
     b.exec = newEx;

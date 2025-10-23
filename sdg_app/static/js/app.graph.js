@@ -1,0 +1,263 @@
+// =========================
+/* MABEL Studio Frontend (graph: wiring, layout, exec/topology, input inference)
+ * - 本ファイル: 配線描画、入出力推論、トポロジカル順によるexec割当、レイアウト関連
+ */
+// =========================
+
+// -------------------------
+// Connections (wiring)
+// -------------------------
+
+/** 名称を正規化（NFKC + trim + 連続空白の単一化 + 小文字化） */
+function normKey(name){
+  return String(name ?? '')
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/** 端子ラベルの可読版（UI表示用に元の名称を返す） */
+function prettyName(name){
+  return String(name ?? '').trim();
+}
+
+function drawConnections() {
+  clearWires();
+
+  const edges = computeEdges();
+  edges.forEach((e) => {
+    const fromEl = el('#node-' + e.from);
+    const toEl = el('#node-' + e.to);
+    if (!fromEl || !toEl) return;
+
+    // ★ ビューポート非依存：ワールド座標で端点を算出
+    const fromBlock = state.blocks.find(b => b.id === e.from);
+    const toBlock = state.blocks.find(b => b.id === e.to);
+    if (!fromBlock || !toBlock) return;
+
+    const fr = {
+      x: (fromBlock.position?.x ?? 0),
+      y: (fromBlock.position?.y ?? 0),
+      w: fromEl.offsetWidth,
+      h: fromEl.offsetHeight
+    };
+    const tr = {
+      x: (toBlock.position?.x ?? 0),
+      y: (toBlock.position?.y ?? 0),
+      w: toEl.offsetWidth,
+      h: toEl.offsetHeight
+    };
+
+    const x1 = fr.x + fr.w - 6;
+    const y1 = fr.y + fr.h / 2;
+    const x2 = tr.x + 6;
+    const y2 = tr.y + tr.h / 2;
+
+    const dx = Math.max(40, Math.abs(x2 - x1) * 0.35);
+    const d = `M ${x1} ${y1} C ${x1+dx} ${y1}, ${x2-dx} ${y2}, ${x2} ${y2}`;
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('stroke', EDGE_STROKE);
+    p.setAttribute('marker-end', 'url(#arrow)');
+    p.setAttribute('fill', 'none');
+    p.setAttribute('opacity', '1');
+    p.setAttribute('class', 'edge');
+    p.setAttribute('filter', 'url(#glow)');
+    p.setAttribute('vector-effect', 'non-scaling-stroke');
+
+    // ホバーで参照名
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = prettyName(e.label);
+    p.appendChild(title);
+
+    wiresSvg.appendChild(p);
+  });
+}
+
+function clearWires(){
+  els('path.edge', wiresSvg).forEach(n => n.remove());
+}
+
+function computeEdges() {
+  const edges = [];
+  const producers = new Map(); // key(norm) -> { name, ids[] }
+
+  // Collect outputs (producers)
+  state.blocks.forEach(b => {
+    const outs = (b.type === 'ai') ? (b.outputs||[]).map(o=>o.name)
+              : (b.type === 'logic') ? (b.outputs||[]).map(o=>o.name)
+              : (b.type === 'python') ? (b.py_outputs||[]) : [];
+    outs.forEach(n => {
+      const display = (n || '').trim();
+      if (!display) return;
+      const k = normKey(display);
+      const cur = producers.get(k) || { name: display, ids: [] };
+      if (!cur.ids.includes(b.id)) cur.ids.push(b.id);
+      producers.set(k, cur);
+    });
+  });
+
+  // Link inputs from placeholders / python inputs
+  state.blocks.forEach(target => {
+    inferredInputs(target).forEach(inpRaw => {
+      const k = normKey(inpRaw);
+      const prod = producers.get(k);
+      if (!prod) return;
+      prod.ids.forEach(pid => {
+        if (pid !== target.id) edges.push({ from: pid, to: target.id, label: inpRaw });
+      });
+    });
+  });
+
+  return edges;
+}
+
+/** 入力の推定：{...} をUnicode対応で抽出。Pythonは inputs を使用。 */
+function inferredInputs(block) {
+  const set = new Set();
+  const scan = (txt) => {
+    if (!txt || typeof txt !== 'string') return;
+    // Unicode 対応
+    const re = /\{\s*([^{}]+?)\s*\}/gu;
+    for (const m of txt.matchAll(re)) {
+      const raw = m[1];
+      if (!raw) continue;
+      const cleaned = raw.normalize('NFKC').trim().replace(/\s+/g, ' ');
+      if (cleaned) set.add(cleaned);
+    }
+  };
+
+  if (block.type === 'ai') {
+    scan(block.system_prompt || '');
+    (block.prompts || []).forEach(scan);
+    if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
+  } else if (block.type === 'logic') {
+    if ((block.op || 'if') === 'for') {
+      scan(block.list || '');
+      if (block.where) scan(JSON.stringify(block.where));
+      scan(block.map || '');
+      const varName = (block.var || 'item').normalize('NFKC').trim().replace(/\s+/g, ' ');
+      if (varName) set.delete(varName);
+      if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
+    } else {
+      scan(JSON.stringify(block.cond || ''));
+      scan(block.then || '');
+      scan(block.else || '');
+      if (block.operands) scan(JSON.stringify(block.operands));
+      if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
+    }
+  } else if (block.type === 'python') {
+    (block.inputs || []).forEach(name => {
+      if (name && typeof name === 'string') {
+        const cleaned = name.normalize('NFKC').trim().replace(/\s+/g, ' ');
+        if (cleaned) set.add(cleaned);
+      }
+    });
+    if (block.run_if) scan(JSON.stringify(block.run_if));
+  } else if (block.type === 'end') {
+    scan(block.reason || '');
+    if (Array.isArray(block.final)) block.final.forEach(f => scan(f.value || ''));
+    if (block.run_if) scan(JSON.stringify(block.run_if));
+  }
+  return Array.from(set);
+}
+
+// -------------------------
+// Layout helpers
+// -------------------------
+function contentBounds() {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  state.blocks.forEach(b => {
+    const node = el('#node-' + b.id);
+    const w = node?.offsetWidth ?? 300;
+    const h = node?.offsetHeight ?? 160;
+    const x = b.position?.x ?? 0;
+    const y = b.position?.y ?? 0;
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w);
+    maxY = Math.max(maxY, y + h);
+  });
+  if (!isFinite(minX)) return { x:0, y:0, w:1, h:1 };
+  return { x:minX, y:minY, w:Math.max(1, maxX-minX), h:Math.max(1, maxY-minY) };
+}
+
+/** 列ごとに垂直センタリング（ズーム倍率を反映） */
+function autolayoutByExec() {
+  const cRect = canvas.getBoundingClientRect();
+  const worldH = cRect.height / viewport.s; // ★ズーム考慮
+  const marginX = 80;
+  const marginY = 30;
+  const colW = 360; // node width + spacing
+  const rowH = 170;
+
+  const execs = Array.from(new Set(state.blocks.map(b => b.exec || 1))).sort((a,b)=>a-b);
+  const xMap = new Map();
+  execs.forEach((ex, i) => xMap.set(ex, 40 + i * (colW + marginX)));
+
+  const byExec = new Map();
+  execs.forEach(ex => byExec.set(ex, state.blocks.filter(b => (b.exec||1) === ex)));
+
+  byExec.forEach((list, ex) => {
+    const n = list.length;
+    const colHeight = n * rowH + (n - 1) * marginY;
+    const startY = Math.max(32, Math.round((worldH - colHeight) / 2));
+    list.forEach((b, idx) => {
+      const x = xMap.get(ex);
+      const y = startY + idx * (rowH + marginY);
+      b.position = snap({x, y});
+    });
+  });
+}
+
+// -------------------------
+// exec 自動割当（配線 -> トポロジカル順）
+// -------------------------
+function autoAssignExecFromEdges() {
+  const edges = computeEdges();
+  const ids = state.blocks.map(b => b.id);
+  const outMap = new Map(); // id -> neighbors[]
+  const indeg = new Map();  // id -> count
+  const level = new Map();  // id -> exec level (1-based)
+
+  ids.forEach(id => { outMap.set(id, []); indeg.set(id, 0); });
+
+  edges.forEach(e => {
+    if (!outMap.has(e.from) || !indeg.has(e.to)) return;
+    outMap.get(e.from).push(e.to);
+    indeg.set(e.to, (indeg.get(e.to) || 0) + 1);
+  });
+
+  const q = [];
+  ids.forEach(id => {
+    if ((indeg.get(id) || 0) === 0) { q.push(id); level.set(id, 1); }
+  });
+
+  const processed = new Set();
+  while (q.length) {
+    const id = q.shift();
+    processed.add(id);
+    const l = level.get(id) || 1;
+    (outMap.get(id) || []).forEach(nid => {
+      level.set(nid, Math.max(level.get(nid) || 1, l + 1));
+      indeg.set(nid, (indeg.get(nid) || 0) - 1);
+      if ((indeg.get(nid) || 0) === 0) q.push(nid);
+    });
+  }
+
+  if (processed.size !== ids.length) {
+    const remaining = ids.filter(id => !processed.has(id));
+    remaining.forEach(id => {
+      const preds = edges.filter(e => e.to === id).map(e => e.from);
+      let maxL = 0;
+      preds.forEach(pid => { maxL = Math.max(maxL, level.get(pid) || 1); });
+      level.set(id, maxL + 1 || 1);
+    });
+  }
+
+  state.blocks.forEach(b => {
+    const newEx = level.get(b.id) || 1;
+    b.exec = newEx;
+  });
+}

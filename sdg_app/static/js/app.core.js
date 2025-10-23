@@ -70,6 +70,21 @@ function applyViewport() {
   const t = `translate(${tx}px, ${ty}px) scale(${viewport.s})`;
   if (nodesLayer) nodesLayer.style.transform = t;
   if (wiresSvg) wiresSvg.style.transform = t;
+
+  // 背景グリッドもパン/ズームに追従させる
+  if (canvas) {
+    const g = GRID * viewport.s;        // 細グリッドの画面上ピッチ
+    const g5 = GRID * 5 * viewport.s;   // 太グリッド（5マス）の画面上ピッチ
+    const ox = tx, oy = ty;             // ワールド(0,0)のスクリーン位置
+
+    // 先頭4レイヤ（縦横の細/太グリッド）のサイズと原点を同期
+    // 最後のレイヤ（radial-gradient）は装飾のため固定
+    canvas.style.backgroundSize =
+      `${g}px ${g}px, ${g}px ${g}px, ${g5}px ${g5}px, ${g5}px ${g5}px, auto`;
+    canvas.style.backgroundPosition =
+      `${ox}px ${oy}px, ${ox}px ${oy}px, ${ox}px ${oy}px, ${ox}px ${oy}px, 0 0`;
+  }
+
   updateZoomHud && updateZoomHud();
 }
 

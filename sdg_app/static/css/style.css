@@ -443,3 +443,64 @@ fieldset.inline-list{
 @media (prefers-reduced-motion: reduce) {
   *{transition:none !important; animation:none !important}
 }
+
+/* --- Sidebar refinements (non-functional) --- */
+.sidebar{ gap:20px; padding:12px 12px 16px; }
+.panel{ display:flex; flex-direction:column; overflow:hidden; border-radius: var(--radius); }
+
+/* 各パネルのヘッダーをサイドバー内で固定（スクロール時に見出しを保持） */
+.panel-head{
+  position: sticky; top: 0; z-index: 5;
+  background: var(--panel-alt);
+  border-top-left-radius: var(--radius); border-top-right-radius: var(--radius);
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+}
+#modelsPanel .panel-head, #libraryPanel .panel-head{ position: sticky; top: 0; }
+
+/* モデル設定（アコーディオン）の視認性強化 */
+.models-list{ padding:6px 8px; }
+.models-list details{
+  margin:6px 0; border-radius:12px;
+  border:1px solid #e7eaee; background:#ffffff;
+}
+.models-list details > summary{
+  list-style:none; cursor:pointer;
+  padding:8px 10px; border-radius:10px; font-weight:700; color:#2b2f33;
+  background: linear-gradient(180deg, #fafbfc, #f7f8f9);
+  border:1px solid #e6e8eb;
+  display:flex; align-items:center; gap:8px;
+}
+.models-list details[open] > summary{ background:#ffffff }
+.models-list details > summary::after{
+  content:'▸'; margin-left:auto; color:var(--muted);
+  transition: transform .12s ease;
+}
+.models-list details[open] > summary::after{ content:'▾' }
+
+/* ライブラリ項目の密度最適化 */
+#libraryPanel .library{ padding-top:8px; }
+.lib-item{ padding:14px 12px; }
+.lib-item .lib-name{ font-size:12px; }
+
+/* YAMLエリア：操作ボタンを固定、プレビューの開閉トリガの可読性強化 */
+.export{ padding:0 12px 12px; border-top:1px solid #eef1f4; }
+.export-controls{
+  position: sticky; top: 0; z-index: 5;
+  background: var(--panel-alt);
+  padding:8px; border-radius:10px;
+}
+.preview-d > summary{
+  list-style:none; cursor:pointer;
+  padding:8px 10px; border-radius:10px; font-weight:700; color:#2b2f33;
+  background: linear-gradient(180deg, #fafbfc, #f7f8f9);
+  border:1px solid #e6e8eb;
+}
+.preview-d[open] > summary{ background:#ffffff }
+.preview-d > summary::after{ content:'▾'; float:right; color:var(--muted) }
+
+#importDrop{ margin:8px 0 }
+#yamlPreview{ height:260px }
+
+@media (max-height: 860px){
+  #yamlPreview{ height:200px }
+}

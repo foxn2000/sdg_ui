@@ -67,12 +67,12 @@
     </section>
 
     <!-- 右：サイドバー -->
-    <aside class="sidebar glass">
+    <aside class="sidebar glass" role="complementary" aria-label="設定サイドバー">
       <!-- モデル設定（右上） -->
-      <section class="panel glass" id="modelsPanel">
+      <section class="panel glass" id="modelsPanel" role="region" aria-labelledby="hdr-models">
         <div class="panel-head clickable">
-          <h2>AIモデル設定</h2>
-          <button id="btnAddModel" class="accent">+ Add Model</button>
+          <h2 id="hdr-models">AIモデル設定</h2>
+          <button id="btnAddModel" class="accent" type="button">+ Add Model</button>
         </div>
         <div id="modelsList" class="models-list">
           <!-- JSで挿入 -->
@@ -80,9 +80,9 @@
       </section>
 
       <!-- ブロック配置（右下） -->
-      <section class="panel glass" id="libraryPanel">
+      <section class="panel glass" id="libraryPanel" role="region" aria-labelledby="hdr-library">
         <div class="panel-head">
-          <h2>ブロック配置</h2>
+          <h2 id="hdr-library">ブロック配置</h2>
         </div>
         <div class="library" id="library">
           <div class="lib-item" draggable="true" data-type="ai" title="AIブロック" tabindex="0">
@@ -105,8 +105,8 @@
 
         <div class="export">
           <div class="export-controls">
-            <button id="btnGenerate" class="primary">YAML Generate</button>
-            <button id="btnImport" class="ghost">YAML Import</button>
+            <button id="btnGenerate" class="primary" type="button">YAML Generate</button>
+            <button id="btnImport" class="ghost" type="button">YAML Import</button>
             <input type="file" id="yamlFile" accept=".yaml,.yml,text/yaml" hidden>
           </div>
           <details class="preview-d" id="previewWrap">

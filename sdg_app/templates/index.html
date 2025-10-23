@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja" data-theme="frutiger-aero">
+<head>
+  <meta charset="utf-8">
+  <title>MABEL Studio — Visual Agent Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+  <header class="topbar glass">
+    <div class="brand">
+      <span class="logo-orb" aria-hidden="true"></span>
+      <strong class="brand-title">MABEL Studio</strong>
+      <span class="sub">Visual YAML Builder for AI Agents</span>
+    </div>
+    <div class="top-actions">
+      <button id="btnClear" class="ghost">New</button>
+      <button id="btnAutoLayout" class="accent" title="exec順で自動整列">Auto Layout</button>
+      <details class="ghost-d">
+        <summary>Help</summary>
+        <div class="popover">
+          <p>右側から <b>AI / LOGIC / CODE / END</b> をドラッグして左キャンバスに配置。</p>
+          <ul>
+            <li>クリックで編集。任意項目は <code>&lt;details&gt;</code> 内。</li>
+            <li><b>{出力名}</b> と同名の入力（<b>{入力名}</b> や Pythonの <b>inputs</b>）を検知して自動配線。<b>保存を押すと再計算</b>。</li>
+            <li><b>Save</b> 時に配線から <b>exec</b> が自動決定され、列ベースで自動整列されます。</li>
+            <li>パン操作：<b>Space + ドラッグ</b> または <b>中ボタン</b>／トラックパッドのスクロールで視点移動。</li>
+            <li>ズーム：<b>Ctrl/⌘ + ホイール/ピンチ</b>、左下HUDの <b>− / 100% / ＋ / Fit</b> でも操作できます。</li>
+            <li>右下 <b>YAML Generate</b> でダウンロード。既存YAMLは <b>YAML Import</b>。</li>
+            <li>ドラッグは24pxグリッドにスナップ。Deleteで選択ノード削除。</li>
+            <li><span class="kbd">Enter</span> でライブラリアイテムを追加（現在の視点の左上に配置）、<span class="kbd">←/→/↑/↓</span> でノード微調整。</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main class="split">
+    <!-- 左：ノードキャンバス -->
+    <section id="canvas" class="canvas" tabindex="0" aria-label="Node canvas">
+      <svg id="wires" class="wires" preserveAspectRatio="none" aria-hidden="true">
+        <defs id="wire-defs">
+          <!-- ライトブルー→ライムの配線グラデーション + 微グロー -->
+          <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="var(--line-start)"></stop>
+            <stop offset="100%" stop-color="var(--line-end)"></stop>
+          </linearGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+          <!-- ★ 矢印のサイズを線幅基準に（ズームでも自然） -->
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" style="fill: var(--line-end);"></path>
+          </marker>
+        </defs>
+      </svg>
+      <div id="nodes" class="nodes"></div>
+      <div class="canvas-hint" role="status" aria-live="polite">
+        Drag or press <span class="kbd">Enter</span> to add • <span class="kbd">Space</span>+drag to pan • <span class="kbd">Ctrl/⌘</span>+wheel to zoom
+      </div>
+      <!-- ★ Zoom HUD はJSで挿入（.zoom-hud） -->
+    </section>
+
+    <!-- 右：サイドバー -->
+    <aside class="sidebar glass">
+      <!-- モデル設定（右上） -->
+      <section class="panel glass" id="modelsPanel">
+        <div class="panel-head clickable">
+          <h2>AIモデル設定</h2>
+          <button id="btnAddModel" class="accent">+ Add Model</button>
+        </div>
+        <div id="modelsList" class="models-list">
+          <!-- JSで挿入 -->
+        </div>
+      </section>
+
+      <!-- ブロック配置（右下） -->
+      <section class="panel glass" id="libraryPanel">
+        <div class="panel-head">
+          <h2>ブロック配置</h2>
+        </div>
+        <div class="library" id="library">
+          <div class="lib-item" draggable="true" data-type="ai" title="AIブロック" tabindex="0">
+            <div class="lib-icon">🤖</div>
+            <div class="lib-name">AI</div>
+          </div>
+          <div class="lib-item" draggable="true" data-type="logic" title="LOGICブロック" tabindex="0">
+            <div class="lib-icon">∴</div>
+            <div class="lib-name">LOGIC</div>
+          </div>
+          <div class="lib-item" draggable="true" data-type="python" title="CODEブロック（type: python）" tabindex="0">
+            <div class="lib-icon">⌘</div>
+            <div class="lib-name">CODE</div>
+          </div>
+          <div class="lib-item" draggable="true" data-type="end" title="ENDブロック（type: end）" tabindex="0">
+            <div class="lib-icon">🏁</div>
+            <div class="lib-name">END</div>
+          </div>
+        </div>
+
+        <div class="export">
+          <div class="export-controls">
+            <button id="btnGenerate" class="primary">YAML Generate</button>
+            <button id="btnImport" class="ghost">YAML Import</button>
+            <input type="file" id="yamlFile" accept=".yaml,.yml,text/yaml" hidden>
+          </div>
+          <details class="preview-d" id="previewWrap">
+            <summary>YAML Preview / Import Dropzone</summary>
+            <div id="importDrop" class="import-drop" aria-label="YAML dropzone">
+              Drop .yaml/.yml here to import
+            </div>
+            <textarea id="yamlPreview" spellcheck="false" aria-label="YAML preview"></textarea>
+          </details>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- ブロック編集モーダル -->
+  <dialog id="editorModal" class="modal glass">
+    <form method="dialog" id="editorForm">
+      <header class="modal-head">
+        <h3 id="editorTitle">Block Editor</h3>
+        <!-- 変更: ブロックの×と同意匠にするため del を付与 -->
+        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+      </header>
+      <div class="modal-body" id="editorBody">
+        <!-- JSでブロック別フォームを生成 -->
+      </div>
+      <footer class="modal-foot">
+        <button class="ghost" value="cancel" type="button" onclick="this.closest('dialog').close()">Cancel</button>
+        <button id="btnSaveBlock" class="accent" value="default">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

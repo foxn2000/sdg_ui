@@ -1,40 +1,42 @@
 /* =========================================================
-   MABEL Studio — Frutiger Aero Theme (微調整版)
+   MABEL Studio — Mono Calm Theme (白黒グレー基調・簡素化)
    ========================================================= */
 
+/* デザイントークン（落ち着いたモノトーン + 低彩度のみ） */
 :root{
   /* Base palette */
-  --bg: radial-gradient(1200px 800px at 20% 0%, rgba(94,208,255,.25), transparent 60%),
-        radial-gradient(1000px 700px at 85% 100%, rgba(168,255,59,.20), transparent 60%),
-        #eef3f7;
-  --panel: rgba(255,255,255,.65);
-  --panel-alt: rgba(255,255,255,.72);
-  --grid:#dfe8f1;
-  --grid-strong:#cfdbe7;
+  --bg: #f6f7f8; /* 全体背景はフラットな明度差のみ */
+  --panel: rgba(255,255,255,.94);
+  --panel-alt: rgba(255,255,255,.98);
+  --grid:#e9ecef;
+  --grid-strong:#e3e6ea;
 
-  --text:#0d2230;
-  --muted:#597a92;
+  --text:#111213;
+  --muted:#6b7280;
 
-  --acc-blue:#5ed0ff;   /* ライトブルー */
-  --acc-lime:#a6ff3b;   /* ライムグリーン */
-  --acc: var(--acc-blue);
+  /* アクセントは深いグレー（強い主張を避ける） */
+  --acc:#222426;
+  --acc-blue:#222426; /* 既存変数互換（不要色はモノトーンへ） */
+  --acc-lime:#222426; /* 既存変数互換 */
 
-  --line-start: var(--acc-blue);
-  --line-end: var(--acc-lime);
+  /* 配線カラーは落ち着いたグレー */
+  --line-start:#a3a7ad;
+  --line-end:#a3a7ad;
 
-  --node:#ffffffb0;
-  --node-top:#ffffffe0;
+  --node:#ffffff;
+  --node-top:#ffffff;
 
-  --radius:14px;
-  --shadow:0 18px 48px rgba(26,65,95,.18), 0 2px 6px rgba(26,65,95,.10);
-  --inner-glow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -1px 0 rgba(0,0,0,.05);
+  --radius:12px;
+  --shadow:0 8px 24px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.06);
+  --inner-glow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.04);
 
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 
-  --edge-opacity: 1;
+  --edge-opacity: .95;
+  --focus: #222426;
 
-  /* 追加: 不透明なパネル色（Helpの可読性向上） */
+  /* Help の可読性用 */
   --panel-opaque: #ffffff;
 }
 
@@ -49,15 +51,15 @@ body{
   -moz-osx-font-smoothing:grayscale;
 }
 
-/* ---- Glass helper ---- */
+/* ---- Glass helper（簡素化） ---- */
 .glass{
   background: var(--panel);
-  backdrop-filter: blur(10px) saturate(1.25);
-  -webkit-backdrop-filter: blur(10px) saturate(1.25);
+  backdrop-filter: blur(8px) saturate(1.05);
+  -webkit-backdrop-filter: blur(8px) saturate(1.05);
   box-shadow: var(--shadow);
-  border:1px solid rgba(255,255,255,.75);
-  border-right-color: rgba(255,255,255,.55);
-  border-bottom-color: rgba(255,255,255,.55);
+  border:1px solid #eceff3;
+  border-right-color: #e9edf2;
+  border-bottom-color: #e9edf2;
   border-radius: var(--radius);
   position: relative;
 }
@@ -65,11 +67,11 @@ body{
   content:"";
   position:absolute; inset:0;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.22), transparent 40%),
-    radial-gradient(400px 120px at 10% -10%, rgba(255,255,255,.65), transparent 60%);
+    linear-gradient(180deg, rgba(255,255,255,.18), transparent 40%),
+    radial-gradient(320px 96px at 10% -10%, rgba(255,255,255,.55), transparent 60%);
   border-radius: inherit;
   pointer-events:none;
-  mix-blend-mode: screen;
+  mix-blend-mode: normal; /* 派手さを抑制 */
 }
 
 /* Top Bar */
@@ -81,55 +83,58 @@ body{
   padding:0 20px;
   position:sticky; top:0;
   z-index:10;
+  background: var(--panel);
 }
 .brand{display:flex; align-items:center; gap:10px;}
 .brand .logo-orb{
   width:14px;height:14px;border-radius:50%;
-  background: radial-gradient(circle at 30% 30%, #fff, var(--acc-blue) 60%, #18b6ff 70%);
-  box-shadow: 0 0 0 2px rgba(255,255,255,.6) inset, 0 0 16px rgba(94,208,255,.75);
+  background: radial-gradient(circle at 30% 30%, #fff, #cfd4db 60%, #b8bdc4 70%);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.7) inset, 0 0 10px rgba(0,0,0,.06);
 }
 .brand .brand-title{letter-spacing:.2px}
 .brand .sub{color:var(--muted);font-size:12px;margin-left:6px;opacity:.95}
 .top-actions{display:flex;align-items:center;gap:10px}
 
+/* Buttons */
 button{
-  cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;
+  cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:700;
   transition: transform .06s ease, box-shadow .12s ease, background .18s ease, color .18s ease, border-color .18s ease;
   will-change: transform;
 }
 button.primary{
-  color:#0b1f2a;
-  background: linear-gradient(180deg, #ffffff, #e9f6ff);
-  border:1px solid rgba(255,255,255,.8);
-  box-shadow: 0 6px 18px rgba(94,208,255,.25), 0 1px 0 rgba(255,255,255,.9) inset;
+  color:var(--text);
+  background:#ffffff;
+  border:1px solid #e6e8eb;
+  box-shadow: 0 4px 12px rgba(0,0,0,.06), 0 1px 0 rgba(255,255,255,.9) inset;
 }
-button.primary:hover{ transform: translateY(-1px) }
+button.primary:hover{ transform: translateY(-1px); background:#f7f7f7 }
 button.accent{
-  background: linear-gradient(90deg, var(--acc-blue), var(--acc-lime));
-  color:#05202b; border:1px solid rgba(255,255,255,.7);
-  box-shadow: 0 8px 24px rgba(94,208,255,.35), 0 1px 0 rgba(255,255,255,.85) inset;
+  background: linear-gradient(180deg, #2a2c2f, #212325);
+  color:#ffffff; border:1px solid #1f2123;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18), 0 1px 0 rgba(255,255,255,.06) inset;
 }
-button.accent:hover{ transform: translateY(-1px) }
+button.accent:hover{ transform: translateY(-1px); background: linear-gradient(180deg, #26282b, #1c1e20) }
 button.ghost{
-  background:rgba(255,255,255,.55); color:#0d2230;
-  border:1px solid rgba(255,255,255,.85);
+  background:#ffffff; color:var(--text);
+  border:1px solid #e6e8eb;
 }
 button:active{ transform: translateY(1px) }
 button:focus-visible{
-  outline: 2px solid var(--acc-blue);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
+/* Help trigger */
 details.ghost-d > summary{
-  list-style:none;cursor:pointer;padding:10px 14px;border:1px solid rgba(255,255,255,.85);
-  border-radius:12px; background:rgba(255,255,255,.55); font-weight:700;
+  list-style:none;cursor:pointer;padding:10px 14px;border:1px solid #e6e8eb;
+  border-radius:10px; background:#ffffff; font-weight:700;
 }
 /* Help を不透明に + 前面に */
 details.ghost-d[open] > .popover{
   position:absolute;margin-top:8px;right:16px;
   background: var(--panel-opaque);
   color: var(--text);
-  border:1px solid #d5e6f3;
+  border:1px solid #e7eaee;
   border-radius:12px;
   box-shadow: var(--shadow);
   padding:12px;max-width:520px;
@@ -144,23 +149,22 @@ details.ghost-d[open] > .popover{
   height: calc(100vh - 64px);
 }
 
-/* Canvas */
+/* Canvas（グレー基調の細いグリッド） */
 .canvas{
   position:relative;
   overflow:hidden;
   background:
-    linear-gradient(#f2f7fb 1px, transparent 1px) 0 0 / 24px 24px,
-    linear-gradient(90deg, #f2f7fb 1px, transparent 1px) 0 0 / 24px 24px,
-    linear-gradient(#e6f1fa 2px, transparent 2px) 0 0 / 120px 120px,
-    linear-gradient(90deg, #e6f1fa 2px, transparent 2px) 0 0 / 120px 120px,
-    radial-gradient(900px 600px at 70% 30%, rgba(94,208,255,.22), transparent 70%),
-    radial-gradient(800px 600px at 10% 90%, rgba(166,255,59,.18), transparent 70%);
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(var(--grid-strong) 2px, transparent 2px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--grid-strong) 2px, transparent 2px) 0 0 / 120px 120px,
+    radial-gradient(720px 480px at 80% 20%, rgba(0,0,0,.03), transparent 60%);
+  -webkit-user-select:none;
   user-select:none;
-  /* 追加: トラックパッド/タッチのパン操作を安定化 */
-  touch-action: none;
+  touch-action: none; /* パン操作安定化 */
 }
 .canvas:focus{outline:none}
-.canvas.drag-over{ box-shadow: inset 0 0 0 2px rgba(94,208,255,.45); }
+.canvas.drag-over{ box-shadow: inset 0 0 0 2px rgba(0,0,0,.18); }
 
 /* ---- Pan & Zoom interaction ---- */
 .canvas.pannable{ cursor: grab; }
@@ -168,7 +172,7 @@ details.ghost-d[open] > .popover{
 
 .canvas-hint{
   position:absolute; left:16px; top:16px; color:var(--muted); font-size:12px;
-  background:rgba(255,255,255,.9); padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.85);
+  background:#ffffff; padding:8px 10px; border-radius:10px; border:1px solid #e6e8eb;
   box-shadow: var(--shadow);
   z-index:1;
 }
@@ -178,13 +182,13 @@ details.ghost-d[open] > .popover{
   position:absolute; inset:0; pointer-events:none; z-index:0;
   transform-origin: 0 0;
   will-change: transform;
-  overflow: visible; /* ★重要: ビューポート外へはみ出す線のクリッピングを解除 */
+  overflow: visible; /* 重要: ビューポート外へはみ出す線のクリッピングを解除 */
 }
 .wires path{
   fill:none; stroke-width:2.5;
   marker-end:url(#arrow);
   opacity:var(--edge-opacity);
-  vector-effect: non-scaling-stroke; /* ★ズームしても線幅を一定に */
+  vector-effect: non-scaling-stroke; /* ズームしても線幅を一定に */
 }
 
 /* Nodes */
@@ -199,28 +203,29 @@ details.ghost-d[open] > .popover{
   max-width:362px;
   color:var(--text);
   background:linear-gradient(180deg, var(--node-top), var(--node));
-  border:1px solid rgba(255,255,255,.9);
+  border:1px solid #e9edf2;
   border-radius:var(--radius);
   box-shadow: var(--shadow), var(--inner-glow);
+  -webkit-user-select:none;
   user-select:none;
   transition: box-shadow .08s ease, transform .08s ease;
-  backdrop-filter: blur(8px) saturate(1.2);
-  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  backdrop-filter: blur(6px) saturate(1.02);
+  -webkit-backdrop-filter: blur(6px) saturate(1.02);
 }
 .node::after{
   content:"";
-  position:absolute; left:8%; right:8%; top:0; height:22px;
-  border-radius: 0 0 14px 14px;
-  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.0));
+  position:absolute; left:8%; right:8%; top:0; height:18px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.0));
   pointer-events:none;
 }
 .node.selected{
-  box-shadow: 0 0 0 3px rgba(94,208,255,.5), var(--shadow);
+  box-shadow: 0 0 0 2px rgba(34,36,38,.45), var(--shadow);
   transform: translateZ(0)
 }
 .node-header{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.85)
+  padding:10px 12px; border-bottom:1px solid #eef1f4
 }
 .node-header[data-drag]{ cursor: move; }
 .node-type{font-weight:800; letter-spacing:.5px; font-size:12px}
@@ -228,37 +233,37 @@ details.ghost-d[open] > .popover{
 .node-badges{display:flex; gap:6px; align-items:center}
 .badge{
   font-size:11px; padding:4px 8px; border-radius:10px;
-  border:1px solid rgba(255,255,255,.85); color:#1c3a4b;
-  background:linear-gradient(180deg, #fff, #eef7ff);
+  border:1px solid #e6e8eb; color:#2b2f33;
+  background:#f7f7f8;
 }
 .del{
-  background:linear-gradient(180deg, #ffffff, #f0f8ff);
-  color:#0d2230; border-radius:10px; border:1px solid rgba(255,255,255,.9);
+  background:#ffffff;
+  color:var(--text); border-radius:10px; border:1px solid #eceff3;
   width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;
 }
 .del:hover{
-  box-shadow: 0 0 0 3px rgba(255, 99, 71, .18) inset, var(--shadow);
-  border-color: #ffe2e2;
+  box-shadow: 0 0 0 3px rgba(34,36,38,.12) inset, var(--shadow);
+  border-color: #e8ebef;
 }
 .node-body{padding:10px;font-size:12.5px; line-height:1.35}
 .node-io{display:flex; gap:8px; flex-wrap:wrap}
 .io-pill{
-  padding:4px 7px; border-radius:8px; border:1px dashed rgba(13,34,48,.25);
-  color:#1a3f51; background: rgba(255,255,255,.65);
+  padding:4px 7px; border-radius:8px; border:1px dashed rgba(17,18,19,.15);
+  color:#2b2f33; background: #ffffff;
   font-family:var(--mono); font-size:11.5px
 }
 
 /* Sidebar */
 .sidebar{
   display:flex; flex-direction:column; gap:16px; padding:12px; overflow:auto;
-  border-left:1px solid rgba(255,255,255,.75);
+  border-left:1px solid #eceff3;
 }
 .panel-head{
-  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.85);
+  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid #eef1f4;
 }
 .panel-head h2{font-size:14px; margin:0}
 .models-list details{
-  border-top:1px solid rgba(255,255,255,.8);
+  border-top:1px solid #eef1f4;
   padding:10px 12px;
 }
 .models-list details[open]{background:var(--panel-alt)}
@@ -272,10 +277,10 @@ details.ghost-d[open] > .popover{
 }
 .model-grid label{font-size:12px; color:var(--muted)}
 .model-grid input, .model-grid textarea, .model-grid select{
-  width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.85);
-  background:linear-gradient(180deg, #fdfefe, #f2f9ff); color:var(--text); font-family:var(--mono)
+  width:100%; padding:10px; border-radius:10px; border:1px solid #e6e8eb;
+  background:#ffffff; color:var(--text); font-family:var(--mono)
 }
-.model-grid details{border:1px dashed #bcd3e5; border-radius:12px; padding:8px 8px; background: rgba(255,255,255,.55)}
+.model-grid details{border:1px dashed #d7dce3; border-radius:12px; padding:8px 8px; background: #ffffff}
 .model-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:8px}
 
 /* Library */
@@ -283,33 +288,32 @@ details.ghost-d[open] > .popover{
   display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; padding:12px;
 }
 .lib-item{
-  background:
-    radial-gradient(140% 100% at 50% -10%, rgba(255,255,255,.85), rgba(255,255,255,.65) 60%, rgba(255,255,255,.5)),
-    linear-gradient(180deg, #ffffff, #ebf7ff);
-  border:1px solid rgba(255,255,255,.9); border-radius:14px; text-align:center; padding:12px; cursor:grab;
-  transition: transform .08s ease, box-shadow .12s ease;
-  box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.7) inset;
+  background:#ffffff;
+  border:1px solid #e6e8eb; border-radius:12px; text-align:center; padding:12px; cursor:grab;
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+  box-shadow: var(--shadow);
 }
 .lib-item:focus, .lib-item:hover{
-  box-shadow: 0 0 0 3px rgba(94,208,255,.4) inset, var(--shadow);
+  box-shadow: 0 0 0 3px rgba(34,36,38,.14) inset, var(--shadow);
+  border-color:#e3e6ea;
 }
 .lib-item:active{cursor:grabbing; transform: scale(.98)}
 .lib-icon{font-size:18px; margin-bottom:6px}
 .lib-name{font-weight:800; letter-spacing:.3px}
 
 /* Export & Import */
-.export{padding:12px; border-top:1px solid rgba(255,255,255,.85)}
+.export{padding:12px; border-top:1px solid #eef1f4}
 .export-controls{display:flex; gap:8px; align-items:center; margin-bottom:8px}
 .preview-d summary{cursor:pointer}
 #importDrop{ margin-bottom:8px; }
 .import-drop{
-  border:1px dashed #bcd3e5; border-radius:12px; padding:10px; text-align:center;
-  color:var(--muted); background: linear-gradient(180deg, #fdfefe, #f2f9ff);
+  border:1px dashed #d7dce3; border-radius:12px; padding:10px; text-align:center;
+  color:var(--muted); background:#ffffff;
 }
-.import-drop.drag{ border-color: var(--acc-blue); color:#0d2230; box-shadow: inset 0 0 0 2px rgba(94,208,255,.25) }
+.import-drop.drag{ border-color: var(--focus); color:var(--text); box-shadow: inset 0 0 0 2px rgba(34,36,38,.18) }
 #yamlPreview{
   width:100%; height:240px; font-family:var(--mono); font-size:12px;
-  background:linear-gradient(180deg, #fff, #f2f9ff); color:#0d2230; border:1px solid rgba(255,255,255,.85); border-radius:12px; padding:10px;
+  background:#ffffff; color:var(--text); border:1px solid #e6e8eb; border-radius:12px; padding:10px;
 }
 
 /* Modal */
@@ -317,24 +321,24 @@ details.ghost-d[open] > .popover{
   width:min(900px, 94vw);
   color:var(--text);
 }
-.modal::backdrop{background:rgba(139,177,199,.35); backdrop-filter: blur(2px)}
+.modal::backdrop{background:rgba(0,0,0,.25); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px)}
 .modal-head{
-  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.85)
+  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid #eef1f4
 }
 .modal-body{padding:12px; max-height:62vh; overflow:auto}
-.modal-foot{display:flex; justify-content:flex-end; gap:8px; padding:10px 12px; border-top:1px solid rgba(255,255,255,.85)}
+.modal-foot{display:flex; justify-content:flex-end; gap:8px; padding:10px 12px; border-top:1px solid #eef1f4}
 
-/* 変更: モーダルの × をブロックの削除ボタン風に */
+/* モーダルの × はノード削除ボタンと同意匠 */
 .icon-close{
-  background:linear-gradient(180deg, #ffffff, #f0f8ff);
-  color:#0d2230;
-  border:1px solid rgba(255,255,255,.9);
+  background:#ffffff;
+  color:var(--text);
+  border:1px solid #eceff3;
   width:28px; height:28px; border-radius:10px;
   display:inline-flex; align-items:center; justify-content:center;
 }
 .icon-close:hover{
-  box-shadow: 0 0 0 3px rgba(255, 99, 71, .18) inset, var(--shadow);
-  border-color: #ffe2e2;
+  box-shadow: 0 0 0 3px rgba(34,36,38,.12) inset, var(--shadow);
+  border-color: #e8ebef;
 }
 
 .form-grid{
@@ -342,12 +346,12 @@ details.ghost-d[open] > .popover{
 }
 .form-grid label{font-size:12px; color:var(--muted)}
 .form-grid input, .form-grid textarea, .form-grid select{
-  width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.85);
-  background:linear-gradient(180deg, #fdfefe, #f2f9ff); color:var(--text); font-family:var(--mono)
+  width:100%; padding:10px; border-radius:10px; border:1px solid #e6e8eb;
+  background:#ffffff; color:var(--text); font-family:var(--mono)
 }
 .form-grid .full{grid-column:1 / -1}
 fieldset.inline-list{
-  border:1px dashed #bcd3e5; border-radius:12px; padding:8px; margin:6px 0; background: rgba(255,255,255,.55);
+  border:1px dashed #d7dce3; border-radius:12px; padding:8px; margin:6px 0; background: #ffffff;
 }
 .inline-list .row{display:grid; grid-template-columns: 1fr 140px 140px 1fr 36px; gap:6px; margin:6px 0}
 .inline-list .row.logic{grid-template-columns: 1fr 120px 120px 1fr 36px}
@@ -357,16 +361,16 @@ fieldset.inline-list{
 .small-note{color:var(--muted); font-size:12px}
 .kbd{
   font-family:var(--mono);
-  background:linear-gradient(180deg, #fdfefe, #f2f9ff);
-  border:1px solid rgba(255,255,255,.85); padding:1px 6px; border-radius:8px
+  background:#f7f7f8;
+  border:1px solid #e6e8eb; padding:1px 6px; border-radius:8px
 }
 
 /* Zoom HUD */
 .zoom-hud{
   position:absolute; left:12px; bottom:12px;
   display:flex; align-items:center; gap:8px;
-  padding:8px; border-radius:12px; border:1px solid rgba(255,255,255,.85);
-  background:rgba(255,255,255,.9);
+  padding:8px; border-radius:12px; border:1px solid #e6e8eb;
+  background:#ffffff;
   box-shadow: var(--shadow);
   z-index:2;
 }
@@ -375,13 +379,13 @@ fieldset.inline-list{
 
 /* Focus ring for keyboard nav */
 [tabindex]:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 2px solid var(--acc-blue);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 /* Scrollbar */
 *::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-thumb{background:#cfe0eb;border-radius:8px;border:1px solid #fff}
+*::-webkit-scrollbar-thumb{background:#d3d6db;border-radius:8px;border:1px solid #fff}
 *::-webkit-scrollbar-track{background:transparent}
 
 /* Reduced motion */

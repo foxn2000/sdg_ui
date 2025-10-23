@@ -18,36 +18,10 @@ function renderModelsPanel() {
     details.appendChild(summary);
 
     const body = document.createElement('div');
-    body.className = 'model-grid';
+    body.className = 'model-actions';
     body.innerHTML = `
-      <label>name</label>
-      <input data-k="name" value="${escapeAttr(m.name || '')}">
-      <label>api_model</label>
-      <input data-k="api_model" value="${escapeAttr(m.api_model || '')}">
-      <label>api_key <span class="small-note">（例: ${'${ENV.OPENAI_API_KEY}'}）</span></label>
-      <input data-k="api_key" value="${escapeAttr(m.api_key || '')}">
-      <label>base_url</label>
-      <input data-k="base_url" value="${escapeAttr(m.base_url || '')}">
-
-      <details>
-        <summary>request_defaults（任意）</summary>
-        <div class="model-grid">
-          ${defaultsFields(m.request_defaults || {})}
-          <div class="small-note">未入力は出力YAMLに含めません。</div>
-        </div>
-      </details>
-
-      <details>
-        <summary>advanced（任意）</summary>
-        <div class="model-grid">
-          <label>organization</label>
-          <input data-kopt="organization" value="${escapeAttr(m.organization || '')}">
-          <label>headers（JSON）</label>
-          <input data-kopt="headers" placeholder='{"X-Org":"..."}' value='${m.headers ? escapeAttr(JSON.stringify(m.headers)) : ""}'>
-        </div>
-      </details>
-
       <div class="model-actions">
+        <button class="ghost" data-act="edit" type="button">Edit</button>
         <button class="ghost" data-act="dup" type="button">Duplicate</button>
         <button class="accent" data-act="del" type="button">Delete</button>
       </div>
@@ -56,42 +30,17 @@ function renderModelsPanel() {
     container.appendChild(details);
 
     // events
-    body.addEventListener('input', (e) => {
-      const t = e.target;
-      const i = Number(details.dataset.index);
-      const model = state.models[i];
-      if (t.matches('[data-k]')) {
-        model[t.dataset.k] = t.value;
-      } else if (t.matches('[data-kdef]')) {
-        const path = t.dataset.kdef;
-        model.request_defaults = model.request_defaults || {};
-        if (path.includes('.')) {
-          const [a,b] = path.split('.');
-          model.request_defaults[a] = model.request_defaults[a] || {};
-          if (b === 'backoff') {
-            try { model.request_defaults[a][b] = JSON.parse(t.value || '{}'); } catch {}
-          } else {
-            model.request_defaults[a][b] = toMaybeNumber(t.value);
-          }
-        } else {
-          model.request_defaults[path] = toMaybeNumber(t.value);
-        }
-      } else if (t.matches('[data-kopt]')) {
-        const k = t.dataset.kopt;
-        if (k === 'headers') {
-          try { model.headers = JSON.parse(t.value || 'null'); } catch {}
-        } else {
-          model[k] = t.value;
-        }
-      }
-      renderNodes(); // モデル名の表示反映
-      drawConnections();
+    summary.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      openModelModal(Number(details.dataset.index));
     });
 
     body.addEventListener('click', (e) => {
       const t = e.target;
       const i = Number(details.dataset.index);
-      if (t.dataset.act === 'del') {
+      if (t.dataset.act === 'edit') {
+        openModelModal(i);
+      } else if (t.dataset.act === 'del') {
         state.models.splice(i, 1);
         renderModelsPanel(); renderNodes(); drawConnections();
       } else if (t.dataset.act === 'dup') {
@@ -116,6 +65,83 @@ function renderModelsPanel() {
     });
     renderModelsPanel(); renderNodes(); drawConnections();
   };
+}
+
+// --- Model detail modal ---
+function openModelModal(i) {
+  const m = state.models[i];
+  const dlg = el('#modelModal');
+  const body = el('#modelModalBody');
+  el('#modelModalTitle').textContent = m.name || 'Model Settings';
+  body.innerHTML = buildModelFormHTML(m);
+
+  // 入力反映（ブロック編集と同水準、機能不変）
+  body.oninput = (e) => {
+    const t = e.target;
+    const model = state.models[i];
+    if (t.matches('[data-k]')) {
+      model[t.dataset.k] = t.value;
+    } else if (t.matches('[data-kdef]')) {
+      const path = t.dataset.kdef;
+      model.request_defaults = model.request_defaults || {};
+      if (path.includes('.')) {
+        const [a,b] = path.split('.');
+        model.request_defaults[a] = model.request_defaults[a] || {};
+        if (b === 'backoff') {
+          try { model.request_defaults[a][b] = JSON.parse(t.value || '{}'); } catch {}
+        } else {
+          model.request_defaults[a][b] = toMaybeNumber(t.value);
+        }
+      } else {
+        model.request_defaults[path] = toMaybeNumber(t.value);
+      }
+    } else if (t.matches('[data-kopt]')) {
+      const k = t.dataset.kopt;
+      if (k === 'headers') {
+        try { model.headers = JSON.parse(t.value || 'null'); } catch {}
+      } else {
+        model[k] = t.value;
+      }
+    }
+    renderModelsPanel(); // サマリー（名称など）反映
+    renderNodes();
+    drawConnections();
+  };
+
+  dlg.showModal();
+}
+
+function buildModelFormHTML(m) {
+  return `
+    <div class="form-grid">
+      <label>name</label>
+      <input data-k="name" value="${escapeAttr(m.name || '')}">
+      <label>api_model</label>
+      <input data-k="api_model" value="${escapeAttr(m.api_model || '')}">
+      <label>api_key <span class="small-note">（例: ${'${ENV.OPENAI_API_KEY}'}）</span></label>
+      <input data-k="api_key" value="${escapeAttr(m.api_key || '')}">
+      <label>base_url</label>
+      <input data-k="base_url" value="${escapeAttr(m.base_url || '')}">
+
+      <details class="full">
+        <summary>request_defaults（任意）</summary>
+        <div class="form-grid full">
+          ${defaultsFields(m.request_defaults || {})}
+          <div class="small-note full">未入力は出力YAMLに含めません。</div>
+        </div>
+      </details>
+
+      <details class="full">
+        <summary>advanced（任意）</summary>
+        <div class="form-grid full">
+          <label>organization</label>
+          <input data-kopt="organization" value="${escapeAttr(m.organization || '')}">
+          <label>headers（JSON）</label>
+          <input data-kopt="headers" placeholder='{"X-Org":"..."}' value='${m.headers ? escapeAttr(JSON.stringify(m.headers)) : ""}'>
+        </div>
+      </details>
+    </div>
+  `;
 }
 
 function defaultsFields(def) {

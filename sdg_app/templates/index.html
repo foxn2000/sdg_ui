@@ -159,6 +159,23 @@
     </form>
   </dialog>
 
+  <!-- モデル設定モーダル -->
+  <dialog id="modelModal" class="modal glass">
+    <form method="dialog" id="modelForm">
+      <header class="modal-head">
+        <h3 id="modelModalTitle">Model Settings</h3>
+        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+      </header>
+      <div class="modal-body" id="modelModalBody">
+        <!-- JSでモデル設定フォームを生成 -->
+      </div>
+      <footer class="modal-foot">
+        <button class="ghost" value="cancel" type="button" onclick="this.closest('dialog').close()">Cancel</button>
+        <button id="btnSaveModel" class="accent" value="default" type="button" onclick="this.closest('dialog').close()">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
   <script src="{{ url_for('static', filename='js/app.core.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.graph.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.yaml.js') }}"></script>

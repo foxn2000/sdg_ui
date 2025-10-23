@@ -529,6 +529,15 @@ fieldset.inline-list{
 }
 .models-list details[open] > summary::after{ content:'▾' }
 
+/* モデルリスト独立スクロール（ヘッダー/ツール固定） */
+#modelsPanel{ display:flex; flex-direction:column; }
+#modelsPanel .models-list{
+  flex: 1 1 auto;
+  min-height: 140px;
+  max-height: 50vh;
+  overflow: auto;
+}
+
 /* ライブラリ項目の密度最適化 */
 #libraryPanel .library{ padding-top:8px; }
 .lib-item{ padding:14px 12px; }

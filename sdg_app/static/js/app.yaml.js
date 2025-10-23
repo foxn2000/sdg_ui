@@ -247,11 +247,14 @@ async function importYamlText(text) {
     renderNodes();
     drawConnections();
 
+    const yamlModal = document.getElementById('yamlModal');
     if (typeof yamlPreview !== 'undefined' && yamlPreview) {
       yamlPreview.value = text;
     }
-    if (typeof previewWrap !== 'undefined' && previewWrap && !previewWrap.open) {
-      previewWrap.open = true;
+    if (yamlModal && typeof yamlModal.showModal === 'function') {
+      yamlModal.showModal();
+    } else if (yamlModal) {
+      yamlModal.setAttribute('open', '');
     }
 
   } catch (err) {

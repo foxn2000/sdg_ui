@@ -226,12 +226,35 @@ function updateZoomHud() {
 // Import / Export & Top actions
 // -------------------------
 function bindGlobalButtons() {
+  const yamlModal = document.getElementById('yamlModal');
+  const btnPreview = document.getElementById('btnPreview');
+
+  // YAMLプレビュー（モーダル表示）
+  if (btnPreview) {
+    btnPreview.onclick = () => {
+      const yaml = toYAML(state);
+      if (yamlPreview) yamlPreview.value = yaml;
+      if (yamlModal && typeof yamlModal.showModal === 'function') {
+        yamlModal.showModal();
+      } else if (yamlModal) {
+        yamlModal.setAttribute('open', '');
+      }
+    };
+  }
+
+  // YAML生成（従来通りダウンロードもしつつ、プレビューも表示）
   el('#btnGenerate').onclick = () => {
     const yaml = toYAML(state);
     yamlPreview.value = yaml;
-    if (previewWrap && !previewWrap.open) previewWrap.open = true;
+    if (yamlModal && typeof yamlModal.showModal === 'function') {
+      yamlModal.showModal();
+    } else if (yamlModal) {
+      yamlModal.setAttribute('open', '');
+    }
     downloadText('mabel.yaml', yaml);
   };
+
+  // クリア
   el('#btnClear').onclick = () => {
     if (!confirm('Clear all models & blocks?')) return;
     state.models = [];
@@ -242,6 +265,8 @@ function bindGlobalButtons() {
     drawConnections();
     yamlPreview.value = '';
   };
+
+  // 自動レイアウト
   const btnAutoLayout = el('#btnAutoLayout');
   if (btnAutoLayout) {
     btnAutoLayout.onclick = () => {

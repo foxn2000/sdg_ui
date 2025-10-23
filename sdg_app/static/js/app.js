@@ -973,8 +973,9 @@ function buildAiForm(b) {
     <label class="full">prompts（複数行：各要素を---で区切り）</label>
     <textarea class="full" rows="5" data-k="prompts">${escapeHtml((b.prompts || ['']).join('\n---\n'))}</textarea>
 
-    <details class="full"><summary>outputs（必須）</summary>
+    <details class="full" open><summary>outputs（必須）</summary>
       <fieldset class="inline-list" id="aiOutputs">
+        <div class="hdr"><div>name</div><div>select</div><div>tag</div><div>regex</div><div>del</div></div>
         <div class="small-note">name / select / tag / regex / join_with（selectに応じて必要のみ）</div>
         ${ (b.outputs || []).map((o, i) => aiOutputRow(o, i)).join('') }
         <button type="button" class="accent" id="btnAddOut">+ add output</button>
@@ -1139,8 +1140,9 @@ function buildLogicForm(b) {
       </div>
     </details>
 
-    <details class="full"><summary>outputs（任意）</summary>
+    <details class="full" open><summary>outputs（任意）</summary>
       <fieldset class="inline-list" id="logicOutputs">
+        <div class="hdr"><div>name</div><div>from</div><div>source</div><div>join_with</div><div>del</div></div>
         <div class="small-note">name / from(boolean|value|join|count|any|all|first|last|list) / source(raw|filtered|mapped) / join_with / test(JSON) / limit / offset</div>
         ${ (b.outputs || []).map(o => logicOutputRow(o)).join('') }
         <button type="button" class="accent" id="btnAddLogicOut">+ add output</button>
@@ -1366,8 +1368,9 @@ function buildEndForm(b) {
     <label>exit_code</label>
     <input data-k="exit_code" value="${escapeAttr(b.exit_code || 'success')}">
 
-    <details class="full"><summary>final（最終出力ペイロード）</summary>
+    <details class="full" open><summary>final（最終出力ペイロード）</summary>
       <fieldset class="inline-list" id="endFinals">
+        <div class="hdr"><div>name</div><div></div><div></div><div>value</div><div>del</div></div>
         ${ (b.final || []).map(f => endFinalRow(f)).join('') }
         <button type="button" class="accent" id="btnAddFinal">+ add final</button>
       </fieldset>

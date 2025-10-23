@@ -350,6 +350,57 @@ details.ghost-d[open] > .popover{
   background:#ffffff; color:var(--text); font-family:var(--mono)
 }
 .form-grid .full{grid-column:1 / -1}
+
+/* ---- Modal form: 読みやすさ向上（機能不変） ---- */
+.modal .form-grid{
+  grid-template-columns: 140px 1fr;
+  column-gap: 12px; row-gap: 10px;
+}
+.modal .form-grid label{ align-self: center; }
+.section-title{
+  font-size:12px; font-weight:800; color:var(--muted);
+  margin:12px 0 2px; letter-spacing:.2px; text-transform:uppercase
+}
+.section-title.full{ grid-column: 1 / -1; }
+
+/* details（折りたたみ）をカード調に */
+.modal .form-grid details{
+  border:1px dashed #d7dce3; border-radius:12px; padding:6px 8px; background:#ffffff
+}
+.modal .form-grid details > summary{
+  list-style:none; cursor:pointer;
+  padding:8px 6px; margin:-6px -6px 6px; border-radius:10px; font-weight:700; color:#2b2f33;
+  background: linear-gradient(180deg, #fafbfc, #f7f8f9);
+  border:1px solid #e6e8eb;
+}
+.modal .form-grid details > summary::after{
+  content: '▾'; float:right; color:var(--muted)
+}
+.modal .form-grid details[open] > summary{ background:#ffffff }
+
+/* 出力リストの列ヘッダ（視認性向上） */
+.inline-list .hdr{
+  display:grid; grid-template-columns: 1fr 140px 140px 1fr 36px;
+  gap:6px; margin:6px 0 2px;
+  font-size:11px; color:var(--muted)
+}
+.inline-list .hdr.sub{
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+
+/* 行の読みやすさ（交互色 + 内側余白） */
+.inline-list .row{ background:#fff; padding:6px; border-radius:8px }
+.inline-list .row:nth-of-type(odd){ background:#fafbfc }
+.inline-list input::placeholder, .inline-list select{ color:#7a818c }
+
+/* テキストエリアの可読性 */
+.modal .form-grid textarea{ line-height:1.4; resize: vertical }
+
+/* 狭幅時は1カラムにフォールバック */
+@media (max-width: 860px){
+  .modal .form-grid{ grid-template-columns: 1fr }
+  .section-title{ margin-top:6px }
+}
 fieldset.inline-list{
   border:1px dashed #d7dce3; border-radius:12px; padding:8px; margin:6px 0; background: #ffffff;
 }

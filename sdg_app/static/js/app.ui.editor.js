@@ -27,6 +27,7 @@ function openEditor(b) {
   `;
   editorBody.appendChild(common);
 
+  if (b.type === 'start') editorBody.appendChild(buildStartForm(b));
   if (b.type === 'ai') editorBody.appendChild(buildAiForm(b));
   if (b.type === 'logic') editorBody.appendChild(buildLogicForm(b));
   if (b.type === 'python') editorBody.appendChild(buildPythonForm(b));
@@ -45,6 +46,7 @@ function openEditor(b) {
     const ex = Number(el('[data-k="exec"]', editorBody).value) || 1;
     b.title = t; b.exec = ex;
 
+    if (b.type === 'start') readStartFormInto(b);
     if (b.type === 'ai') readAiFormInto(b);
     if (b.type === 'logic') readLogicFormInto(b);
     if (b.type === 'python') readPythonFormInto(b);
@@ -66,6 +68,33 @@ editorModal.addEventListener('close', () => {
   els('.node').forEach(n => n.classList.remove('selected'));
   selectedBlockId = null;
 });
+
+function buildStartForm(b) {
+  const wrap = document.createElement('div');
+  wrap.className = 'form-grid';
+  wrap.innerHTML = `
+    <div class="full">
+      <p class="small-note">STARTブロックは入力を持たず、固定の出力「UserInput」を提供します。YAMLには出力されません。</p>
+    </div>
+    <label class="full">outputs（固定）</label>
+    <fieldset class="inline-list" id="startOutputs">
+      ${ (b.outputs || ['UserInput']).map(o => `
+        <div class="row">
+          <input placeholder="output name" data-o="start_out" value="${escapeAttr(o)}" readonly>
+          <div></div>
+          <div></div>
+        </div>
+      `).join('') }
+    </fieldset>
+  `;
+  return wrap;
+}
+
+function readStartFormInto(b) {
+  // startブロックは出力が固定なので、特に読み取る必要はない
+  // 念のため配列を維持
+  b.outputs = ['UserInput'];
+}
 
 function buildAiForm(b) {
   const wrap = document.createElement('div');
@@ -544,6 +573,7 @@ function readEndFormInto(b) {
 function allOutputNames() {
   const names = [];
   state.blocks.forEach(b => {
+    if (b.type === 'start') (b.outputs||[]).forEach(n => { if (n) names.push(n); });
     if (b.type === 'ai') (b.outputs||[]).forEach(o => { if (o.name) names.push(o.name); });
     if (b.type === 'logic') (b.outputs||[]).forEach(o => { if (o.name) names.push(o.name); });
     if (b.type === 'python') (b.py_outputs||[]).forEach(n => { if (n) names.push(n); });

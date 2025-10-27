@@ -64,6 +64,9 @@ function toYAML(state) {
 
   push('blocks:');
   ordered.forEach(b => {
+    // startブロックはYAMLに出力しない
+    if (b.type === 'start') return;
+    
     push(`  - type: ${b.type}`);
     push(`    exec: ${b.exec || 1}`);
     // YAML用の接続順ナンバー（1..N）を付与

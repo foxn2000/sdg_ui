@@ -92,7 +92,8 @@ function computeEdges() {
 
   // Collect outputs (producers)
   state.blocks.forEach(b => {
-    const outs = (b.type === 'ai') ? (b.outputs||[]).map(o=>o.name)
+    const outs = (b.type === 'start') ? (b.outputs||[])
+              : (b.type === 'ai') ? (b.outputs||[]).map(o=>o.name)
               : (b.type === 'logic') ? (b.outputs||[]).map(o=>o.name)
               : (b.type === 'python') ? (b.py_outputs||[]) : [];
     outs.forEach(n => {

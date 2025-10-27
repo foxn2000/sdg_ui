@@ -49,7 +49,13 @@ function bindLibraryDnD() {
 function addBlock(type, pos) {
   const id = 'b' + state.idCounter++;
   let block;
-  if (type === 'ai') {
+  if (type === 'start') {
+    block = {
+      id, type, title: 'Start', exec: 0,
+      position: snap(pos),
+      outputs: ['UserInput']
+    };
+  } else if (type === 'ai') {
     block = {
       id, type, title: 'AI Block', exec: guessExec(),
       position: snap(pos),
@@ -182,6 +188,7 @@ function renderIoPills(b) {
   const inputs = inferredInputs(b);
   const inputsHtml = inputs.map(n => `<span class="io-pill">in:{${escapeHtml(n)}}&hairsp;</span>`).join('');
   let outputs = [];
+  if (b.type === 'start') outputs = (b.outputs || []);
   if (b.type === 'ai') outputs = (b.outputs || []).map(o => o.name);
   if (b.type === 'logic') outputs = (b.outputs || []).map(o => o.name);
   if (b.type === 'python') outputs = (b.py_outputs || []);

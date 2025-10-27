@@ -61,8 +61,23 @@ function drawConnections() {
     const x2 = tr.x + 6;
     const y2 = tr.y + tr.h / 2;
 
-    const dx = Math.max(40, Math.abs(x2 - x1) * 0.35);
-    const d = `M ${x1} ${y1} C ${x1+dx} ${y1}, ${x2-dx} ${y2}, ${x2} ${y2}`;
+    // 横方向と縦方向の距離を計算
+    const horizontalDist = x2 - x1;
+    const verticalDist = Math.abs(y2 - y1);
+    const dx = Math.max(40, Math.abs(horizontalDist) * 0.35);
+    
+    // Y座標が近い場合（横一直線に近い）は制御点を少し上にずらして線を見えるようにする
+    let d;
+    if (verticalDist < 10) {
+      // ほぼ横一直線の場合：制御点を少し上にずらす
+      const offset = 15; // わずかに上にずらす
+      const cy1 = y1 - offset;
+      const cy2 = y2 - offset;
+      d = `M ${x1} ${y1} C ${x1+dx} ${cy1}, ${x2-dx} ${cy2}, ${x2} ${y2}`;
+    } else {
+      // 通常のベジェ曲線
+      d = `M ${x1} ${y1} C ${x1+dx} ${y1}, ${x2-dx} ${y2}, ${x2} ${y2}`;
+    }
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttribute('d', d);
     p.setAttribute('stroke', EDGE_STROKE);

@@ -76,16 +76,6 @@ function buildStartForm(b) {
     <div class="full">
       <p class="small-note">STARTブロックは入力を持たず、固定の出力「UserInput」を提供します。YAMLには出力されません。</p>
     </div>
-    <label class="full">outputs（固定）</label>
-    <fieldset class="inline-list" id="startOutputs">
-      ${ (b.outputs || ['UserInput']).map(o => `
-        <div class="row">
-          <input placeholder="output name" data-o="start_out" value="${escapeAttr(o)}" readonly>
-          <div></div>
-          <div></div>
-        </div>
-      `).join('') }
-    </fieldset>
   `;
   return wrap;
 }

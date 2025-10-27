@@ -12,8 +12,11 @@ function renderModelsPanel() {
     details.dataset.index = String(idx);
     const summary = document.createElement('summary');
     summary.innerHTML = `
-      <span class="model-title">${escapeHtml(m.name || '(unnamed)')}</span>
-      <span class="model-id">${escapeHtml(m.api_model || '')}</span>
+      <span class="model-info">
+        <span class="model-title">${escapeHtml(m.name || '(unnamed)')}</span>
+        <span class="model-id">${escapeHtml(m.api_model || '')}</span>
+      </span>
+      <button class="model-delete-btn" data-act="del-summary" type="button" title="削除">×</button>
     `;
     details.appendChild(summary);
 
@@ -30,7 +33,19 @@ function renderModelsPanel() {
     container.appendChild(details);
 
     // events
+    const deleteBtn = summary.querySelector('[data-act="del-summary"]');
+    deleteBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const i = Number(details.dataset.index);
+      if (confirm(`モデル "${state.models[i].name}" を削除しますか？`)) {
+        state.models.splice(i, 1);
+        renderModelsPanel(); renderNodes(); drawConnections();
+      }
+    });
+    
     summary.addEventListener('click', (ev) => {
+      if (ev.target.closest('[data-act="del-summary"]')) return;
       ev.preventDefault();
       openModelModal(Number(details.dataset.index));
     });

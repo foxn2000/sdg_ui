@@ -200,7 +200,6 @@ function removeBlock(id) {
   const idx = state.blocks.findIndex(b => b.id === id);
   if (idx >= 0) state.blocks.splice(idx, 1);
   autoAssignExecFromEdges();
-  autolayoutByExec();
   renderNodes();
   drawConnections();
 }

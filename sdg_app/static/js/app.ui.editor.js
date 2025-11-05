@@ -101,13 +101,32 @@ function buildAiForm(b) {
     <label class="full">prompts（複数行：各要素を---で区切り）</label>
     <textarea class="full" rows="5" data-k="prompts">${escapeHtml((b.prompts || ['']).join('\n---\n'))}</textarea>
 
+    <details class="full"><summary>mode（v2: text/json）</summary>
+      <div class="form-grid">
+        <label>mode</label>
+        <select data-k="mode">
+          <option value="text" ${(b.mode||'text')==='text'?'selected':''}>text</option>
+          <option value="json" ${b.mode==='json'?'selected':''}>json</option>
+        </select>
+      </div>
+    </details>
+
     <details class="full" open><summary>outputs（必須）</summary>
       <fieldset class="inline-list" id="aiOutputs">
-        <div class="hdr"><div>name</div><div>select</div><div>tag</div><div>regex</div><div>del</div></div>
-        <div class="small-note">name / select / tag / regex / join_with（selectに応じて必要のみ）</div>
+        <div class="hdr"><div>name</div><div>select</div><div>tag/path</div><div>regex</div><div>type_hint</div><div>del</div></div>
+        <div class="small-note">name / select(full/tag/regex/jsonpath) / tag or path / regex / type_hint / join_with</div>
         ${ (b.outputs || []).map((o, i) => aiOutputRow(o, i)).join('') }
         <button type="button" class="accent" id="btnAddOut">+ add output</button>
       </fieldset>
+    </details>
+
+    <details class="full"><summary>save_to（v2: 出力をグローバル変数に保存）</summary>
+      <div class="form-grid">
+        <label class="full">変数名: 出力名（例: memo: Answer）</label>
+        <textarea class="full" rows="2" data-k="save_to_vars" placeholder="memo: Answer">${ 
+          b.save_to?.vars ? Object.entries(b.save_to.vars).map(([k,v]) => `${k}: ${v}`).join('\n') : ''
+        }</textarea>
+      </div>
     </details>
 
     <details class="full"><summary>params（任意・モデルdefaultsを上書き）</summary>
@@ -119,16 +138,26 @@ function buildAiForm(b) {
       </div>
     </details>
 
-    <details class="full"><summary>run_if / on_error（任意）</summary>
+    <details class="full"><summary>run_if / on_error / retry（任意）</summary>
       <div class="form-grid">
-        <label>run_if（JSON: 例 {"equals":["{Flag}","on"]}）</label>
+        <label>run_if（JSON/MEX: 例 {"equals":["{Flag}","on"]}）</label>
         <input data-k="run_if" class="full" value='${b.run_if ? escapeAttr(JSON.stringify(b.run_if)) : ''}'>
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
           <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
           <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="retry" ${b.on_error==='retry'?'selected':''}>retry</option>
         </select>
+        <label class="full">retry（JSON: {"max_attempts":2, "backoff":{"type":"exponential","base_ms":500}}）</label>
+        <input data-k="retry" class="full" value='${b.retry ? escapeAttr(JSON.stringify(b.retry)) : ''}'>
+      </div>
+    </details>
+
+    <details class="full"><summary>budget（v2: ブロック局所予算）</summary>
+      <div class="form-grid">
+        <label class="full">budget（JSON: {"ai":{"max_calls":5}}）</label>
+        <input data-k="budget" class="full" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
       </div>
     </details>
   `;
@@ -136,7 +165,7 @@ function buildAiForm(b) {
   wrap.addEventListener('click', (e) => {
     if (e.target.id === 'btnAddOut') {
       const fieldset = el('#aiOutputs', wrap);
-      const o = { name: 'Out_' + Math.random().toString(36).slice(2,6), select: 'full', tag:'', regex:'', join_with:'' };
+      const o = { name: 'Out_' + Math.random().toString(36).slice(2,6), select: 'full', tag:'', regex:'', path:'', type_hint:'', join_with:'' };
       fieldset.insertAdjacentHTML('beforeend', aiOutputRow(o, 0));
     }
     if (e.target.matches('[data-act="delOut"]')) {
@@ -155,12 +184,14 @@ function aiOutputRow(o, i) {
     <div class="row">
       <input placeholder="name" data-o="name" value="${escapeAttr(o.name || '')}">
       <select data-o="select">
-        <option value="full" ${o.select==='full'?'selected':''}>full</option>
+        <option value="full" ${(o.select||'full')==='full'?'selected':''}>full</option>
         <option value="tag" ${o.select==='tag'?'selected':''}>tag</option>
         <option value="regex" ${o.select==='regex'?'selected':''}>regex</option>
+        <option value="jsonpath" ${o.select==='jsonpath'?'selected':''}>jsonpath</option>
       </select>
-      <input placeholder="tag (when select=tag)" data-o="tag" value="${escapeAttr(o.tag || '')}">
-      <input placeholder="regex (when select=regex)" data-o="regex" value="${escapeAttr(o.regex || '')}">
+      <input placeholder="tag/path" data-o="tag_or_path" value="${escapeAttr(o.tag || o.path || '')}">
+      <input placeholder="regex" data-o="regex" value="${escapeAttr(o.regex || '')}">
+      <input placeholder="type_hint" data-o="type_hint" value="${escapeAttr(o.type_hint || '')}">
       <button type="button" class="del" data-act="delOut" aria-label="Delete output">✕</button>
     </div>
     <div class="row">
@@ -174,23 +205,57 @@ function readAiFormInto(b) {
   b.system_prompt = el('[data-k="system_prompt"]', editorBody).value;
   b.prompts = el('[data-k="prompts"]', editorBody).value.split(/\n---\n/g);
 
+  // mode (v2)
+  const mode = el('[data-k="mode"]', editorBody)?.value || 'text';
+  b.mode = mode;
+
+  // outputs
   const outRows = els('#aiOutputs .row', editorBody);
   const outputs = [];
   for (let i = 0; i < outRows.length; i += 2) {
     const rMain = outRows[i];
     const rJoin = outRows[i+1];
     if (!rMain) continue;
-    const o = {
-      name: el('[data-o="name"]', rMain).value.trim(),
-      select: el('[data-o="select"]', rMain).value,
-      tag: el('[data-o="tag"]', rMain).value.trim(),
-      regex: el('[data-o="regex"]', rMain).value.trim(),
-      join_with: rJoin ? (el('[data-o="join_with"]', rJoin).value) : ''
-    };
-    if (o.name) outputs.push(o);
+    const name = el('[data-o="name"]', rMain).value.trim();
+    const select = el('[data-o="select"]', rMain).value || 'full';
+    const tagOrPath = el('[data-o="tag_or_path"]', rMain).value.trim();
+    const regex = el('[data-o="regex"]', rMain).value.trim();
+    const typeHint = el('[data-o="type_hint"]', rMain).value.trim();
+    const joinWith = rJoin ? (el('[data-o="join_with"]', rJoin).value) : '';
+
+    if (!name) continue;
+
+    const o = { name, select };
+    
+    // selectに応じてtag/path/regexを設定
+    if (select === 'tag' && tagOrPath) o.tag = tagOrPath;
+    if (select === 'jsonpath' && tagOrPath) o.path = tagOrPath;
+    if (select === 'regex' && regex) o.regex = regex;
+    if (joinWith) o.join_with = joinWith;
+    if (typeHint) o.type_hint = typeHint;
+    
+    outputs.push(o);
   }
   b.outputs = outputs;
 
+  // save_to (v2)
+  const saveToVarsText = el('[data-k="save_to_vars"]', editorBody)?.value.trim() || '';
+  if (saveToVarsText) {
+    const vars = {};
+    saveToVarsText.split('\n').forEach(line => {
+      const match = line.match(/^\s*(\w+)\s*:\s*(.+?)\s*$/);
+      if (match) vars[match[1]] = match[2];
+    });
+    if (Object.keys(vars).length > 0) {
+      b.save_to = { vars };
+    } else {
+      b.save_to = undefined;
+    }
+  } else {
+    b.save_to = undefined;
+  }
+
+  // params
   const params = {};
   els('[data-param]', editorBody).forEach(inp => {
     const k = inp.dataset.param;
@@ -204,10 +269,21 @@ function readAiFormInto(b) {
   });
   b.params = params;
 
+  // run_if
   const runIfStr = el('[data-k="run_if"]', editorBody).value.trim();
   b.run_if = runIfStr ? safeParseJson(runIfStr, null) : null;
+  
+  // on_error
   const oe = el('[data-k="on_error"]', editorBody).value;
   b.on_error = oe || undefined;
+
+  // retry (v2)
+  const retryStr = el('[data-k="retry"]', editorBody)?.value.trim() || '';
+  b.retry = retryStr ? safeParseJson(retryStr, null) : undefined;
+
+  // budget (v2)
+  const budgetStr = el('[data-k="budget"]', editorBody)?.value.trim() || '';
+  b.budget = budgetStr ? safeParseJson(budgetStr, null) : undefined;
 }
 
 function buildLogicForm(b) {
@@ -224,6 +300,13 @@ function buildLogicForm(b) {
       <option value="or" ${b.op==='or'?'selected':''}>or</option>
       <option value="not" ${b.op==='not'?'selected':''}>not</option>
       <option value="for" ${b.op==='for'?'selected':''}>for</option>
+      <option value="while" ${b.op==='while'?'selected':''}>while (v2)</option>
+      <option value="set" ${b.op==='set'?'selected':''}>set (v2)</option>
+      <option value="let" ${b.op==='let'?'selected':''}>let (v2)</option>
+      <option value="reduce" ${b.op==='reduce'?'selected':''}>reduce (v2)</option>
+      <option value="call" ${b.op==='call'?'selected':''}>call (v2)</option>
+      <option value="emit" ${b.op==='emit'?'selected':''}>emit (v2)</option>
+      <option value="recurse" ${b.op==='recurse'?'selected':''}>recurse (v2)</option>
     </select>
 
     <details class="full"><summary>条件・分岐（op=if時）</summary>
@@ -412,17 +495,42 @@ function buildPythonForm(b) {
   wrap.innerHTML = `
     <label>name（必須）</label>
     <input data-k="py_name" value="${escapeAttr(b.py_name || '')}">
-    <label>function（必須）</label>
-    <input data-k="function" value="${escapeAttr(b.function || '')}">
+    <label>function/entrypoint（必須）</label>
+    <input data-k="function" value="${escapeAttr(b.function || b.entrypoint || '')}">
 
     <label>inputs（複数可・候補から選択/自由入力）</label>
     <input class="full" data-k="inputs" placeholder="例: Answer, Plan" value="${escapeAttr((b.inputs || []).join(', '))}">
     <div class="small-note full">利用可能な出力: ${allOutputNames().map(x=>`<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</div>
 
-    <label>code_path</label>
-    <input class="full" data-k="code_path" value="${escapeAttr(b.code_path || '')}">
-    <label>venv_path</label>
-    <input class="full" data-k="venv_path" value="${escapeAttr(b.venv_path || '')}">
+    <details class="full"><summary>function_code（v2: インライン関数）</summary>
+      <div class="form-grid">
+        <label class="full">Pythonコード（空の場合はcode_pathを使用）</label>
+        <textarea class="full" rows="8" data-k="function_code" placeholder="def main(ctx, **inputs):\n    return {'Output': value}">${escapeHtml(b.function_code || '')}</textarea>
+      </div>
+    </details>
+
+    <details class="full"><summary>code_path / venv_path（v1互換）</summary>
+      <div class="form-grid">
+        <label>code_path</label>
+        <input class="full" data-k="code_path" value="${escapeAttr(b.code_path || '')}">
+        <label>venv_path（非推奨: runtime.pythonを使用推奨）</label>
+        <input class="full" data-k="venv_path" value="${escapeAttr(b.venv_path || '')}">
+      </div>
+    </details>
+
+    <details class="full"><summary>v2拡張設定</summary>
+      <div class="form-grid">
+        <label>use_env</label>
+        <select data-k="use_env">
+          <option value="global" ${(b.use_env||'global')==='global'?'selected':''}>global（既定）</option>
+          <option value="override" ${b.use_env==='override'?'selected':''}>override</option>
+        </select>
+        <label class="full">timeout_ms</label>
+        <input data-k="timeout_ms" type="number" value="${b.timeout_ms ?? ''}">
+        <label class="full">ctx_access（カンマ区切り: get, set, emit, log等）</label>
+        <input class="full" data-k="ctx_access" value="${(b.ctx_access || []).join(', ')}">
+      </div>
+    </details>
 
     <details class="full"><summary>outputs（必須）</summary>
       <fieldset class="inline-list" id="pyOutputs">
@@ -437,16 +545,19 @@ function buildPythonForm(b) {
       </fieldset>
     </details>
 
-    <details class="full"><summary>run_if / on_error（任意）</summary>
+    <details class="full"><summary>run_if / on_error / retry（任意）</summary>
       <div class="form-grid">
-        <label>run_if（JSON）</label>
+        <label>run_if（JSON/MEX）</label>
         <input class="full" data-k="run_if" value='${b.run_if ? escapeAttr(JSON.stringify(b.run_if)) : ''}'>
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
           <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
           <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="retry" ${b.on_error==='retry'?'selected':''}>retry</option>
         </select>
+        <label class="full">retry（JSON）</label>
+        <input data-k="retry" class="full" value='${b.retry ? escapeAttr(JSON.stringify(b.retry)) : ''}'>
       </div>
     </details>
   `;
@@ -472,8 +583,23 @@ function readPythonFormInto(b) {
   b.py_name = el('[data-k="py_name"]', editorBody).value.trim();
   b.function = el('[data-k="function"]', editorBody).value.trim();
   b.inputs = el('[data-k="inputs"]', editorBody).value.split(',').map(s=>s.trim()).filter(Boolean);
+  
+  // function_code (v2)
+  const funcCode = el('[data-k="function_code"]', editorBody)?.value.trim() || '';
+  b.function_code = funcCode || undefined;
+  
   b.code_path = el('[data-k="code_path"]', editorBody).value.trim();
   b.venv_path = el('[data-k="venv_path"]', editorBody).value.trim();
+
+  // v2拡張設定
+  const useEnv = el('[data-k="use_env"]', editorBody)?.value || 'global';
+  b.use_env = useEnv !== 'global' ? useEnv : undefined;
+  
+  const timeoutMs = el('[data-k="timeout_ms"]', editorBody)?.value.trim() || '';
+  b.timeout_ms = timeoutMs ? toMaybeNumber(timeoutMs) : undefined;
+  
+  const ctxAccess = el('[data-k="ctx_access"]', editorBody)?.value.trim() || '';
+  b.ctx_access = ctxAccess ? ctxAccess.split(',').map(s => s.trim()).filter(Boolean) : undefined;
 
   const outs = [];
   els('#pyOutputs [data-o="py_out"]', editorBody).forEach(inp => {
@@ -485,6 +611,10 @@ function readPythonFormInto(b) {
   b.run_if = runIfStr ? safeParseJson(runIfStr, null) : null;
   const oe = el('[data-k="on_error"]', editorBody).value;
   b.on_error = oe || undefined;
+  
+  // retry (v2)
+  const retryStr = el('[data-k="retry"]', editorBody)?.value.trim() || '';
+  b.retry = retryStr ? safeParseJson(retryStr, null) : undefined;
 }
 
 function buildEndForm(b) {

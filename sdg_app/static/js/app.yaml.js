@@ -1,16 +1,110 @@
 // =========================
 /* MABEL Studio Frontend (yaml: YAML export/import utilities)
  * - 本ファイル: YAMLの生成/ダウンロード、YAMLインポート（/api/import 連携）
+ * - MABEL v2対応
  */
 // =========================
 
 // -------------------------
-// YAML Export
+// YAML Export (MABEL v2)
 // -------------------------
 function toYAML(state) {
   const lines = [];
   const push = (s='') => lines.push(s);
 
+  // MABEL v2ヘッダー
+  push('mabel:');
+  push('  version: "2.0"');
+  if (state.mabel?.id) push(`  id: ${yamlStr(state.mabel.id)}`);
+  if (state.mabel?.name) push(`  name: ${yamlStr(state.mabel.name)}`);
+  if (state.mabel?.description) push(`  description: ${yamlStr(state.mabel.description)}`);
+  push('');
+
+  // Runtime (存在する場合)
+  if (state.runtime && Object.keys(state.runtime).length > 0) {
+    push('runtime:');
+    if (state.runtime.python) {
+      push('  python:');
+      const py = state.runtime.python;
+      if (py.interpreter) push(`    interpreter: ${yamlStr(py.interpreter)}`);
+      if (py.venv) push(`    venv: ${yamlStr(py.venv)}`);
+      if (py.requirements_file) push(`    requirements_file: ${yamlStr(py.requirements_file)}`);
+      if (py.requirements && Array.isArray(py.requirements)) {
+        push('    requirements:');
+        py.requirements.forEach(r => push(`      - ${yamlStr(r)}`));
+      }
+      if (py.allow_network !== undefined) push(`    allow_network: ${py.allow_network}`);
+      if (py.env && Object.keys(py.env).length > 0) {
+        push('    env:');
+        Object.entries(py.env).forEach(([k, v]) => push(`      ${k}: ${yamlStr(v)}`));
+      }
+    }
+    push('');
+  }
+
+  // Globals (存在する場合)
+  if (state.globals && Object.keys(state.globals).length > 0) {
+    push('globals:');
+    if (state.globals.const && Object.keys(state.globals.const).length > 0) {
+      push('  const:');
+      Object.entries(state.globals.const).forEach(([k, v]) => {
+        push(`    ${k}: ${typeof v === 'object' ? dumpInlineObj(v) : yamlStr(v)}`);
+      });
+    }
+    if (state.globals.vars && Object.keys(state.globals.vars).length > 0) {
+      push('  vars:');
+      Object.entries(state.globals.vars).forEach(([k, v]) => {
+        push(`    ${k}: ${typeof v === 'object' ? dumpInlineObj(v) : yamlStr(v)}`);
+      });
+    }
+    push('');
+  }
+
+  // Budgets (存在する場合)
+  if (state.budgets && Object.keys(state.budgets).length > 0) {
+    push('budgets:');
+    if (state.budgets.loops) {
+      push('  loops:');
+      push(`    max_iters: ${state.budgets.loops.max_iters || 1000}`);
+      if (state.budgets.loops.on_exceed) push(`    on_exceed: ${state.budgets.loops.on_exceed}`);
+    }
+    if (state.budgets.recursion) {
+      push('  recursion:');
+      push(`    max_depth: ${state.budgets.recursion.max_depth || 64}`);
+      if (state.budgets.recursion.on_exceed) push(`    on_exceed: ${state.budgets.recursion.on_exceed}`);
+    }
+    if (state.budgets.wall_time_ms) push(`  wall_time_ms: ${state.budgets.wall_time_ms}`);
+    if (state.budgets.ai) {
+      push('  ai:');
+      if (state.budgets.ai.max_calls) push(`    max_calls: ${state.budgets.ai.max_calls}`);
+      if (state.budgets.ai.max_tokens) push(`    max_tokens: ${state.budgets.ai.max_tokens}`);
+    }
+    push('');
+  }
+
+  // Functions (存在する場合)
+  if (state.functions && Object.keys(state.functions).length > 0) {
+    push('functions:');
+    if (state.functions.logic && Array.isArray(state.functions.logic)) {
+      push('  logic:');
+      state.functions.logic.forEach(fn => {
+        push(`    - name: ${yamlStr(fn.name)}`);
+        if (fn.params) push(`      params: ${dumpInlineObj(fn.params)}`);
+        if (fn.body) push(`      body: ${dumpInlineObj(fn.body)}`);
+      });
+    }
+    if (state.functions.python && Array.isArray(state.functions.python)) {
+      push('  python:');
+      state.functions.python.forEach(fn => {
+        push(`    - name: ${yamlStr(fn.name)}`);
+        if (fn.params) push(`      params: ${dumpInlineObj(fn.params)}`);
+        if (fn.code) push(`      code: ${yamlStr(fn.code)}`);
+      });
+    }
+    push('');
+  }
+
+  // Models
   push('models:');
   state.models.forEach(m => {
     push(`  - name: ${yamlStr(m.name)}`);
@@ -92,14 +186,28 @@ function toYAML(state) {
         }
       });
 
+      // mode (v2)
+      if (b.mode) push(`    mode: ${b.mode}`);
+
       push(`    outputs:`);
       (b.outputs || []).forEach(o => {
         push(`      - name: ${yamlStr(o.name)}`);
         push(`        select: ${o.select || 'full'}`);
         if (o.select === 'tag' && o.tag) push(`        tag: ${yamlStr(o.tag)}`);
+        if (o.select === 'jsonpath' && o.path) push(`        path: ${yamlStr(o.path)}`);
         if (o.select === 'regex' && o.regex) push(`        regex: ${yamlStr(o.regex)}`);
         if (o.join_with) push(`        join_with: ${yamlStr(o.join_with)}`);
+        if (o.type_hint) push(`        type_hint: ${yamlStr(o.type_hint)}`);
       });
+
+      // save_to (v2)
+      if (b.save_to && b.save_to.vars && Object.keys(b.save_to.vars).length > 0) {
+        push(`    save_to:`);
+        push(`      vars:`);
+        Object.entries(b.save_to.vars).forEach(([k, v]) => {
+          push(`        ${k}: ${yamlStr(v)}`);
+        });
+      }
 
       if (b.params && Object.keys(b.params).length) {
         push(`    params:`);
@@ -114,6 +222,8 @@ function toYAML(state) {
 
       if (b.run_if) push(`    run_if: ${dumpInlineObj(b.run_if)}`);
       if (b.on_error) push(`    on_error: ${b.on_error}`);
+      if (b.retry) push(`    retry: ${dumpInlineObj(b.retry)}`);
+      if (b.budget) push(`    budget: ${dumpInlineObj(b.budget)}`);
 
     } else if (b.type === 'logic') {
       if (b.name) push(`    name: ${yamlStr(b.name)}`);

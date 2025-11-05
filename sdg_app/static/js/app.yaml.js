@@ -263,13 +263,31 @@ function toYAML(state) {
 
     } else if (b.type === 'python') {
       push(`    name: ${yamlStr(b.py_name || '')}`);
-      push(`    function: ${yamlStr(b.function || '')}`);
+      if (b.function || b.entrypoint) push(`    function: ${yamlStr(b.function || b.entrypoint || '')}`);
+      
+      // function_code (v2)
+      if (b.function_code) {
+        push(`    function_code: |`);
+        b.function_code.split('\n').forEach(line => push(`      ${line}`));
+      }
+      
       push(`    inputs: [${(b.inputs || []).map(x => yamlStr(x)).join(', ')}]`);
-      push(`    code_path: ${yamlStr(b.code_path || './script.py')}`);
-      push(`    venv_path: ${yamlStr(b.venv_path || './.venv')}`);
+      
+      if (b.code_path) push(`    code_path: ${yamlStr(b.code_path)}`);
+      if (b.venv_path) push(`    venv_path: ${yamlStr(b.venv_path)}`);
+      
+      // v2拡張フィールド
+      if (b.use_env && b.use_env !== 'global') push(`    use_env: ${b.use_env}`);
+      if (b.timeout_ms) push(`    timeout_ms: ${b.timeout_ms}`);
+      if (b.ctx_access && Array.isArray(b.ctx_access)) {
+        push(`    ctx_access: [${b.ctx_access.map(x => yamlStr(x)).join(', ')}]`);
+      }
+      
       push(`    outputs: [${(b.py_outputs || []).map(x => yamlStr(x)).join(', ')}]`);
+      
       if (b.run_if) push(`    run_if: ${dumpInlineObj(b.run_if)}`);
       if (b.on_error) push(`    on_error: ${b.on_error}`);
+      if (b.retry) push(`    retry: ${dumpInlineObj(b.retry)}`);
 
     } else if (b.type === 'end') {
       if (b.reason !== undefined && b.reason !== '') push(`    reason: ${yamlStr(b.reason)}`);
@@ -372,6 +390,15 @@ async function importYamlText(text) {
     }
     const st = (data && typeof data === 'object' && 'state' in data) ? data.state : data;
 
+    // v2トップレベル要素の反映
+    if (st.mabel) state.mabel = st.mabel;
+    if (st.runtime) state.runtime = st.runtime;
+    if (st.globals) state.globals = st.globals;
+    if (st.budgets) state.budgets = st.budgets;
+    if (st.functions) state.functions = st.functions;
+    if (st.templates) state.templates = st.templates;
+    if (st.files) state.files = st.files;
+
     // 旧状態から「exec列ごとの順序」で座標とIDを継承
     const prevBlocks = Array.isArray(state.blocks) ? state.blocks : [];
     const prevByExec = new Map();
@@ -404,6 +431,7 @@ async function importYamlText(text) {
 
       // UIタイトル補完（name等があればtitleに反映）
       if (!bb.title && bb.name) bb.title = bb.name;
+      if (!bb.title && bb.py_name) bb.title = bb.py_name;
 
       return bb;
     });

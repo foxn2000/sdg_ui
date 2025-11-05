@@ -880,7 +880,10 @@ function inferredInputs(block) {
       if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
     }
   } else if (block.type === 'python') {
-    (block.inputs || []).forEach(name => {
+    // inputsは配列またはオブジェクトの可能性がある
+    const inputs = block.inputs || [];
+    const inputArray = Array.isArray(inputs) ? inputs : Object.values(inputs);
+    inputArray.forEach(name => {
       if (name && typeof name === 'string') {
         const cleaned = name.normalize('NFKC').trim().replace(/\s+/g, ' ');
         if (cleaned) set.add(cleaned);

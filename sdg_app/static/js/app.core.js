@@ -32,10 +32,18 @@
 const el = (sel, root = document) => root.querySelector(sel);
 const els = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-// Global state
+// Global state (MABEL v2)
 const state = {
+  mabel: { version: "2.0" },
+  runtime: {},
+  globals: {},
+  budgets: {},
+  functions: {},
   models: [],
+  templates: [],
+  files: [],
   blocks: [],
+  connections: [],
   idCounter: 1,
 };
 

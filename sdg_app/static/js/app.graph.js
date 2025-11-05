@@ -156,30 +156,84 @@ function inferredInputs(block) {
     (block.prompts || []).forEach(scan);
     if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
   } else if (block.type === 'logic') {
-    if ((block.op || 'if') === 'for') {
+    const op = block.op || 'if';
+    
+    if (op === 'for') {
       scan(block.list || '');
       if (block.where) scan(JSON.stringify(block.where));
       scan(block.map || '');
       const varName = (block.var || 'item').normalize('NFKC').trim().replace(/\s+/g, ' ');
       if (varName) set.delete(varName);
-      if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
+    } else if (op === 'set') {
+      // set演算子: value フィールドをスキャン
+      if (block.value !== undefined) scan(JSON.stringify(block.value));
+    } else if (op === 'let') {
+      // let演算子: bindings と body をスキャン
+      if (block.bindings) scan(JSON.stringify(block.bindings));
+      if (Array.isArray(block.body)) {
+        block.body.forEach(stmt => scan(JSON.stringify(stmt)));
+      }
+    } else if (op === 'call') {
+      // call演算子: with パラメータをスキャン
+      if (block.with) scan(JSON.stringify(block.with));
+    } else if (op === 'reduce') {
+      // reduce演算子: list と body をスキャン
+      scan(block.list || '');
+      if (block.value !== undefined) scan(JSON.stringify(block.value));
+      if (Array.isArray(block.body)) {
+        block.body.forEach(stmt => scan(JSON.stringify(stmt)));
+      }
+      // accumulator と var は除外
+      const accName = (block.accumulator || '').normalize('NFKC').trim().replace(/\s+/g, ' ');
+      const varName = (block.var || '').normalize('NFKC').trim().replace(/\s+/g, ' ');
+      if (accName) set.delete(accName);
+      if (varName) set.delete(varName);
+    } else if (op === 'while') {
+      // while演算子: init, cond, step をスキャン
+      if (Array.isArray(block.init)) {
+        block.init.forEach(stmt => scan(JSON.stringify(stmt)));
+      }
+      if (block.cond) scan(JSON.stringify(block.cond));
+      if (Array.isArray(block.step)) {
+        block.step.forEach(stmt => scan(JSON.stringify(stmt)));
+      }
+    } else if (op === 'recurse') {
+      // recurse演算子: with パラメータをスキャン
+      if (block.with) scan(JSON.stringify(block.with));
+      if (block.function) {
+        if (block.function.base_case) scan(JSON.stringify(block.function.base_case));
+        if (Array.isArray(block.function.body)) {
+          block.function.body.forEach(stmt => scan(JSON.stringify(stmt)));
+        }
+      }
     } else {
+      // if演算子など、その他の演算子
       scan(JSON.stringify(block.cond || ''));
       scan(block.then || '');
       scan(block.else || '');
       if (block.operands) scan(JSON.stringify(block.operands));
-      if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
     }
+    
+    // run_if は全ての op で処理
+    if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
   } else if (block.type === 'python') {
     // inputsは配列またはオブジェクトの可能性がある
     const inputs = block.inputs || [];
-    const inputArray = Array.isArray(inputs) ? inputs : Object.values(inputs);
-    inputArray.forEach(name => {
-      if (name && typeof name === 'string') {
-        const cleaned = name.normalize('NFKC').trim().replace(/\s+/g, ' ');
-        if (cleaned) set.add(cleaned);
-      }
-    });
+    if (Array.isArray(inputs)) {
+      inputs.forEach(name => {
+        if (name && typeof name === 'string') {
+          // 入力値内の{...}パターンもスキャン
+          scan(name);
+        }
+      });
+    } else if (typeof inputs === 'object') {
+      // オブジェクト形式の場合、値をスキャン
+      Object.values(inputs).forEach(value => {
+        if (value && typeof value === 'string') {
+          scan(value);
+        }
+      });
+    }
     if (block.run_if) scan(JSON.stringify(block.run_if));
   } else if (block.type === 'end') {
     scan(block.reason || '');

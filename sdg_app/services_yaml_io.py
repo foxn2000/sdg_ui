@@ -17,6 +17,22 @@ def yaml_to_state(text: str) -> Dict[str, Any]:
     files = data.get("files") or []
     blocks = data.get("blocks") or []
     connections = data.get("connections") or []
+    
+    # ブロックのoutputsを正規化（文字列配列→ディクショナリ配列）
+    if isinstance(blocks, list):
+        for block in blocks:
+            if isinstance(block, dict) and "outputs" in block:
+                outputs = block["outputs"]
+                if isinstance(outputs, list):
+                    normalized_outputs = []
+                    for output in outputs:
+                        if isinstance(output, str):
+                            # 文字列の場合、nameフィールドを持つディクショナリに変換
+                            normalized_outputs.append({"name": output})
+                        elif isinstance(output, dict):
+                            # すでにディクショナリの場合はそのまま使用
+                            normalized_outputs.append(output)
+                    block["outputs"] = normalized_outputs
 
     # モデルの正規化（idフィールドを必須化）
     if isinstance(models, list):

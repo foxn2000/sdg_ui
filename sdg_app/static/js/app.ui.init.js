@@ -278,6 +278,14 @@ function bindGlobalButtons() {
     };
   }
 
+  // v2設定
+  const btnV2Settings = el('#btnV2Settings');
+  if (btnV2Settings) {
+    btnV2Settings.onclick = () => {
+      openV2Settings();
+    };
+  }
+
   // YAML Apply: プレビューで編集した内容をそのまま取り込み（サーバで検証・反映）
   const btnYamlApply = document.getElementById('btnYamlApply');
   if (btnYamlApply) {

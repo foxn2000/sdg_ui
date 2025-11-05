@@ -243,6 +243,47 @@ function toYAML(state) {
         if (b.drop_empty !== undefined) push(`    drop_empty: ${b.drop_empty}`);
         if (b.where) push(`    where: ${dumpInlineObj(b.where)}`);
         if (b.map) push(`    map: ${yamlStr(b.map)}`);
+      } else if (b.op === 'set') {
+        // v2: set演算子
+        if (b.var) push(`    var: ${yamlStr(b.var)}`);
+        if (b.value !== undefined) {
+          push(`    value: ${dumpInlineObj(b.value)}`);
+        }
+      } else if (b.op === 'let') {
+        // v2: let演算子
+        if (b.bindings) push(`    bindings: ${dumpInlineObj(b.bindings)}`);
+        if (b.body) push(`    body: ${dumpInlineObj(b.body)}`);
+      } else if (b.op === 'reduce') {
+        // v2: reduce演算子
+        if (b.list !== undefined) push(`    list: ${yamlStr(b.list || '')}`);
+        if (b.value !== undefined) push(`    value: ${dumpInlineObj(b.value)}`);
+        if (b.var) push(`    var: ${yamlStr(b.var)}`);
+        if (b.accumulator) push(`    accumulator: ${yamlStr(b.accumulator)}`);
+        if (b.body) push(`    body: ${dumpInlineObj(b.body)}`);
+      } else if (b.op === 'while') {
+        // v2: while演算子
+        if (b.init) push(`    init: ${dumpInlineObj(b.init)}`);
+        if (b.cond) push(`    cond: ${dumpInlineObj(b.cond)}`);
+        if (b.step) push(`    step: ${dumpInlineObj(b.step)}`);
+        if (b.budget) push(`    budget: ${dumpInlineObj(b.budget)}`);
+      } else if (b.op === 'call') {
+        // v2: call演算子
+        if (b.function) push(`    function: ${yamlStr(b.function)}`);
+        if (b.with) push(`    with: ${dumpInlineObj(b.with)}`);
+        if (b.returns && Array.isArray(b.returns)) {
+          push(`    returns: [${b.returns.map(x => yamlStr(x)).join(', ')}]`);
+        }
+      } else if (b.op === 'emit') {
+        // v2: emit演算子
+        if (b.value !== undefined) {
+          push(`    value: ${dumpInlineObj(b.value)}`);
+        }
+      } else if (b.op === 'recurse') {
+        // v2: recurse演算子
+        if (b.name) push(`    name: ${yamlStr(b.name)}`);
+        if (b.function) push(`    function: ${dumpInlineObj(b.function)}`);
+        if (b.with) push(`    with: ${dumpInlineObj(b.with)}`);
+        if (b.budget) push(`    budget: ${dumpInlineObj(b.budget)}`);
       }
 
       if (b.outputs && b.outputs.length) {

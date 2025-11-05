@@ -351,6 +351,83 @@ function buildLogicForm(b) {
       </div>
     </details>
 
+    <details class="full"><summary>set 仕様（op=set時, v2）</summary>
+      <div class="form-grid">
+        <label>var（変数名）</label>
+        <input class="full" data-k="set_var" value="${escapeAttr(b.var || '')}">
+        <label class="full">value（JSON/MEX式）</label>
+        <textarea class="full" rows="3" data-k="set_value">${escapeHtml(typeof b.value === 'object' ? JSON.stringify(b.value, null, 2) : (b.value || ''))}</textarea>
+      </div>
+    </details>
+
+    <details class="full"><summary>let 仕様（op=let時, v2）</summary>
+      <div class="form-grid">
+        <label class="full">bindings（JSON: ローカル変数束縛）</label>
+        <textarea class="full" rows="3" data-k="let_bindings">${escapeHtml(b.bindings ? JSON.stringify(b.bindings, null, 2) : '{}')}</textarea>
+        <label class="full">body（JSON配列: 実行ステップ）</label>
+        <textarea class="full" rows="5" data-k="let_body">${escapeHtml(b.body ? JSON.stringify(b.body, null, 2) : '[]')}</textarea>
+      </div>
+    </details>
+
+    <details class="full"><summary>reduce 仕様（op=reduce時, v2）</summary>
+      <div class="form-grid">
+        <label>list（リストソース）</label>
+        <input class="full" data-k="reduce_list" value="${escapeAttr(b.list || '')}">
+        <label class="full">value（初期値, JSON/MEX）</label>
+        <input class="full" data-k="reduce_value" value="${escapeAttr(typeof b.value === 'object' ? JSON.stringify(b.value) : (b.value ?? ''))}">
+        <label>var（アイテム変数名）</label>
+        <input data-k="reduce_var" value="${escapeAttr(b.var || 'item')}">
+        <label>accumulator（累積変数名）</label>
+        <input data-k="reduce_accumulator" value="${escapeAttr(b.accumulator || 'accumulator')}">
+        <label class="full">body（JSON配列: 累積ロジック）</label>
+        <textarea class="full" rows="5" data-k="reduce_body">${escapeHtml(b.body ? JSON.stringify(b.body, null, 2) : '[]')}</textarea>
+      </div>
+    </details>
+
+    <details class="full"><summary>while 仕様（op=while時, v2）</summary>
+      <div class="form-grid">
+        <label class="full">init（JSON配列: 初期化ステップ）</label>
+        <textarea class="full" rows="3" data-k="while_init">${escapeHtml(b.init ? JSON.stringify(b.init, null, 2) : '[]')}</textarea>
+        <label class="full">cond（JSON/MEX: ループ継続条件）</label>
+        <textarea class="full" rows="2" data-k="while_cond">${escapeHtml(b.cond ? JSON.stringify(b.cond, null, 2) : '{}')}</textarea>
+        <label class="full">step（JSON配列: ループボディ）</label>
+        <textarea class="full" rows="5" data-k="while_step">${escapeHtml(b.step ? JSON.stringify(b.step, null, 2) : '[]')}</textarea>
+        <label class="full">budget（JSON: ループ予算制限）</label>
+        <input class="full" data-k="while_budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
+      </div>
+    </details>
+
+    <details class="full"><summary>call 仕様（op=call時, v2）</summary>
+      <div class="form-grid">
+        <label>function（関数名）</label>
+        <input class="full" data-k="call_function" value="${escapeAttr(b.function || b.name || '')}">
+        <label class="full">with（JSON: 引数マッピング）</label>
+        <textarea class="full" rows="3" data-k="call_with">${escapeHtml(b.with ? JSON.stringify(b.with, null, 2) : '{}')}</textarea>
+        <label class="full">returns（配列: 戻り値変数名）</label>
+        <input class="full" data-k="call_returns" value="${escapeAttr((b.returns || []).join(', '))}">
+      </div>
+    </details>
+
+    <details class="full"><summary>emit 仕様（op=emit時, v2）</summary>
+      <div class="form-grid">
+        <label class="full">value（JSON/MEX: 発行する値）</label>
+        <textarea class="full" rows="3" data-k="emit_value">${escapeHtml(typeof b.value === 'object' ? JSON.stringify(b.value, null, 2) : (b.value || ''))}</textarea>
+      </div>
+    </details>
+
+    <details class="full"><summary>recurse 仕様（op=recurse時, v2）</summary>
+      <div class="form-grid">
+        <label>name（再帰関数名）</label>
+        <input class="full" data-k="recurse_name" value="${escapeAttr(b.name || '')}">
+        <label class="full">function（JSON: {args, returns, base_case, body}）</label>
+        <textarea class="full" rows="10" data-k="recurse_function">${escapeHtml(b.function ? JSON.stringify(b.function, null, 2) : '{}')}</textarea>
+        <label class="full">with（JSON: 初期呼び出し引数）</label>
+        <textarea class="full" rows="3" data-k="recurse_with">${escapeHtml(b.with ? JSON.stringify(b.with, null, 2) : '{}')}</textarea>
+        <label class="full">budget（JSON: 再帰深度制限）</label>
+        <input class="full" data-k="recurse_budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
+      </div>
+    </details>
+
     <details class="full" open><summary>outputs（任意）</summary>
       <fieldset class="inline-list" id="logicOutputs">
         <div class="hdr"><div>name</div><div>from</div><div>source</div><div>join_with</div><div>del</div></div>
@@ -428,30 +505,134 @@ function readLogicFormInto(b) {
   b.name = el('[data-k="name"]', editorBody).value.trim();
   b.op = el('[data-k="op"]', editorBody).value;
 
+  // if演算子
   const condStr = el('[data-k="cond"]', editorBody).value.trim();
   b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
-
   b.then = el('[data-k="then"]', editorBody).value;
   b.else = el('[data-k="else"]', editorBody).value;
 
+  // and/or/not演算子  
   const opsStr = el('[data-k="operands"]', editorBody).value.trim();
   b.operands = opsStr ? safeParseJson(opsStr, []) : undefined;
 
-  // for spec
-  b.list = el('[data-k="list"]', editorBody).value;
-  b.parse = el('[data-k="parse"]', editorBody).value || undefined;
-  b.regex_pattern = el('[data-k="regex_pattern"]', editorBody).value || undefined;
-  const varVal = el('[data-k="var"]', editorBody).value.trim();
+  // for演算子
+  const listEl = el('[data-k="list"]', editorBody);
+  if (listEl) b.list = listEl.value;
+  b.parse = el('[data-k="parse"]', editorBody)?.value || undefined;
+  b.regex_pattern = el('[data-k="regex_pattern"]', editorBody)?.value || undefined;
+  const varVal = el('[data-k="var"]', editorBody)?.value.trim() || '';
   b.var = varVal || undefined;
-  const dropSel = el('[data-k="drop_empty"]', editorBody).value;
+  const dropSel = el('[data-k="drop_empty"]', editorBody)?.value || '';
   if (dropSel === '') {
     b.drop_empty = undefined;
   } else {
     b.drop_empty = (dropSel === 'true');
   }
-  const whereStr = el('[data-k="where"]', editorBody).value.trim();
+  const whereStr = el('[data-k="where"]', editorBody)?.value.trim() || '';
   b.where = whereStr ? safeParseJson(whereStr, null) : undefined;
-  b.map = el('[data-k="map"]', editorBody).value;
+  const mapEl = el('[data-k="map"]', editorBody);
+  if (mapEl) b.map = mapEl.value;
+
+  // set演算子 (v2)
+  const setVarEl = el('[data-k="set_var"]', editorBody);
+  if (setVarEl && setVarEl.value.trim()) {
+    b.var = setVarEl.value.trim();
+  }
+  const setValueEl = el('[data-k="set_value"]', editorBody);
+  if (setValueEl && setValueEl.value.trim()) {
+    const valueStr = setValueEl.value.trim();
+    b.value = safeParseJson(valueStr, valueStr);
+  }
+
+  // let演算子 (v2)
+  const letBindingsEl = el('[data-k="let_bindings"]', editorBody);
+  if (letBindingsEl && letBindingsEl.value.trim()) {
+    b.bindings = safeParseJson(letBindingsEl.value.trim(), {});
+  }
+  const letBodyEl = el('[data-k="let_body"]', editorBody);
+  if (letBodyEl && letBodyEl.value.trim()) {
+    b.body = safeParseJson(letBodyEl.value.trim(), []);
+  }
+
+  // reduce演算子 (v2)
+  const reduceListEl = el('[data-k="reduce_list"]', editorBody);
+  if (reduceListEl && reduceListEl.value.trim()) {
+    b.list = reduceListEl.value.trim();
+  }
+  const reduceValueEl = el('[data-k="reduce_value"]', editorBody);
+  if (reduceValueEl && reduceValueEl.value.trim()) {
+    const valueStr = reduceValueEl.value.trim();
+    b.value = safeParseJson(valueStr, valueStr);
+  }
+  const reduceVarEl = el('[data-k="reduce_var"]', editorBody);
+  if (reduceVarEl && reduceVarEl.value.trim()) {
+    b.var = reduceVarEl.value.trim();
+  }
+  const reduceAccEl = el('[data-k="reduce_accumulator"]', editorBody);
+  if (reduceAccEl && reduceAccEl.value.trim()) {
+    b.accumulator = reduceAccEl.value.trim();
+  }
+  const reduceBodyEl = el('[data-k="reduce_body"]', editorBody);
+  if (reduceBodyEl && reduceBodyEl.value.trim()) {
+    b.body = safeParseJson(reduceBodyEl.value.trim(), []);
+  }
+
+  // while演算子 (v2)
+  const whileInitEl = el('[data-k="while_init"]', editorBody);
+  if (whileInitEl && whileInitEl.value.trim()) {
+    b.init = safeParseJson(whileInitEl.value.trim(), []);
+  }
+  const whileCondEl = el('[data-k="while_cond"]', editorBody);
+  if (whileCondEl && whileCondEl.value.trim()) {
+    b.cond = safeParseJson(whileCondEl.value.trim(), {});
+  }
+  const whileStepEl = el('[data-k="while_step"]', editorBody);
+  if (whileStepEl && whileStepEl.value.trim()) {
+    b.step = safeParseJson(whileStepEl.value.trim(), []);
+  }
+  const whileBudgetEl = el('[data-k="while_budget"]', editorBody);
+  if (whileBudgetEl && whileBudgetEl.value.trim()) {
+    b.budget = safeParseJson(whileBudgetEl.value.trim(), null);
+  }
+
+  // call演算子 (v2)
+  const callFuncEl = el('[data-k="call_function"]', editorBody);
+  if (callFuncEl && callFuncEl.value.trim()) {
+    b.function = callFuncEl.value.trim();
+  }
+  const callWithEl = el('[data-k="call_with"]', editorBody);
+  if (callWithEl && callWithEl.value.trim()) {
+    b.with = safeParseJson(callWithEl.value.trim(), {});
+  }
+  const callReturnsEl = el('[data-k="call_returns"]', editorBody);
+  if (callReturnsEl && callReturnsEl.value.trim()) {
+    b.returns = callReturnsEl.value.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  // emit演算子 (v2)
+  const emitValueEl = el('[data-k="emit_value"]', editorBody);
+  if (emitValueEl && emitValueEl.value.trim()) {
+    const valueStr = emitValueEl.value.trim();
+    b.value = safeParseJson(valueStr, valueStr);
+  }
+
+  // recurse演算子 (v2)
+  const recurseNameEl = el('[data-k="recurse_name"]', editorBody);
+  if (recurseNameEl && recurseNameEl.value.trim()) {
+    b.name = recurseNameEl.value.trim();
+  }
+  const recurseFuncEl = el('[data-k="recurse_function"]', editorBody);
+  if (recurseFuncEl && recurseFuncEl.value.trim()) {
+    b.function = safeParseJson(recurseFuncEl.value.trim(), {});
+  }
+  const recurseWithEl = el('[data-k="recurse_with"]', editorBody);
+  if (recurseWithEl && recurseWithEl.value.trim()) {
+    b.with = safeParseJson(recurseWithEl.value.trim(), {});
+  }
+  const recurseBudgetEl = el('[data-k="recurse_budget"]', editorBody);
+  if (recurseBudgetEl && recurseBudgetEl.value.trim()) {
+    b.budget = safeParseJson(recurseBudgetEl.value.trim(), null);
+  }
 
   // outputs
   const rows = els('#logicOutputs .row', editorBody);

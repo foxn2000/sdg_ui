@@ -17,6 +17,7 @@
     <div class="top-actions">
       <button id="btnClear" class="ghost">New</button>
       <button id="btnAutoLayout" class="accent" title="exec順で自動整列">Auto Layout</button>
+      <button id="btnV2Settings" class="accent" title="v2設定（runtime, budgets, globals等）">⚙️ v2設定</button>
       <details class="ghost-d">
         <summary>Help</summary>
         <div class="popover">
@@ -178,12 +179,30 @@
     </form>
   </dialog>
 
+  <!-- v2設定モーダル -->
+  <dialog id="v2SettingsModal" class="modal glass" style="width: 90%; max-width: 1000px;">
+    <form method="dialog" id="v2SettingsForm">
+      <header class="modal-head">
+        <h3>MABEL v2 設定</h3>
+        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+      </header>
+      <div class="modal-body" id="v2SettingsBody" style="max-height: 70vh; overflow-y: auto;">
+        <!-- JSで設定フォームを生成 -->
+      </div>
+      <footer class="modal-foot">
+        <button class="ghost" value="cancel" type="button" onclick="this.closest('dialog').close()">Cancel</button>
+        <button id="btnSaveV2Settings" class="accent" value="default">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
   <script src="{{ url_for('static', filename='js/app.core.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.graph.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.yaml.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.ui.models.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.ui.nodes.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.ui.editor.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.ui.v2settings.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.ui.init.js') }}"></script>
 </body>
 </html>

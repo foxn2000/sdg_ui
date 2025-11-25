@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja" data-theme="frutiger-aero">
+
 <head>
   <meta charset="utf-8">
   <title>MABEL Studio — Visual Agent Builder</title>
@@ -7,6 +8,7 @@
   <meta name="color-scheme" content="light">
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
+
 <body>
   <header class="topbar glass">
     <div class="brand">
@@ -17,7 +19,12 @@
     <div class="top-actions">
       <button id="btnClear" class="ghost">New</button>
       <button id="btnAutoLayout" class="accent" title="exec順で自動整列">Auto Layout</button>
-      <button id="btnV2Settings" class="accent" title="v2設定（runtime, budgets, globals等）">⚙️ v2設定</button>
+      <button id="btnV2Settings" class="accent" title="v2設定（runtime, budgets, globals等）"><span
+          class="icon icon-settings"><svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg></span>v2設定</button>
       <details class="ghost-d">
         <summary>Help</summary>
         <div class="popover">
@@ -52,14 +59,16 @@
             </feMerge>
           </filter>
           <!-- ★ 矢印のサイズを線幅基準に（ズームでも自然） -->
-          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse" markerUnits="strokeWidth">
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto-start-reverse" markerUnits="strokeWidth">
             <path d="M 0 0 L 10 5 L 0 10 z" style="fill: var(--line-end);"></path>
           </marker>
         </defs>
       </svg>
       <div id="nodes" class="nodes"></div>
       <div class="canvas-hint" role="status" aria-live="polite">
-        Drag or press <span class="kbd">Enter</span> to add • <span class="kbd">Space</span>+drag to pan • <span class="kbd">Ctrl/⌘</span>+wheel to zoom
+        Drag or press <span class="kbd">Enter</span> to add • <span class="kbd">Space</span>+drag to pan • <span
+          class="kbd">Ctrl/⌘</span>+wheel to zoom
       </div>
       <!-- ★ Zoom HUD はJSで挿入（.zoom-hud） -->
     </section>
@@ -76,7 +85,8 @@
           <button id="btnModelsSaveLocal" class="ghost" type="button" title="ブラウザに保存（ブロックへは影響しません）">Save</button>
           <button id="btnModelsLoadLocal" class="ghost" type="button" title="ブラウザから読込（ブロックへは影響しません）">Load</button>
           <button id="btnModelsReset" class="ghost danger" type="button" title="既定のモデル設定に戻す（ブロックは維持）">Reset</button>
-          <button id="btnModelsDownloadYAML" class="primary wide" type="button" title="モデル設定のみをYAML保存">Models YAML</button>
+          <button id="btnModelsDownloadYAML" class="primary wide" type="button" title="モデル設定のみをYAML保存">Models
+            YAML</button>
         </div>
         <div class="panel-note small-note">モデル設定のみの操作です（ブロックには影響しません）。</div>
         <div id="modelsList" class="models-list">
@@ -91,23 +101,48 @@
         </div>
         <div class="library" id="library">
           <div class="lib-item" draggable="true" data-type="start" title="STARTブロック（UserInput出力のみ）" tabindex="0">
-            <div class="lib-icon">▶️</div>
+            <div class="lib-icon"><span class="icon icon-start"><svg viewBox="0 0 24 24">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg></span></div>
             <div class="lib-name">START</div>
           </div>
           <div class="lib-item" draggable="true" data-type="ai" title="AIブロック" tabindex="0">
-            <div class="lib-icon">🤖</div>
+            <div class="lib-icon"><span class="icon icon-ai"><svg viewBox="0 0 24 24">
+                  <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
+                  <rect x="9" y="9" width="6" height="6" />
+                  <line x1="9" y1="1" x2="9" y2="4" />
+                  <line x1="15" y1="1" x2="15" y2="4" />
+                  <line x1="9" y1="20" x2="9" y2="23" />
+                  <line x1="15" y1="20" x2="15" y2="23" />
+                  <line x1="20" y1="9" x2="23" y2="9" />
+                  <line x1="20" y1="14" x2="23" y2="14" />
+                  <line x1="1" y1="9" x2="4" y2="9" />
+                  <line x1="1" y1="14" x2="4" y2="14" />
+                </svg></span></div>
             <div class="lib-name">AI</div>
           </div>
           <div class="lib-item" draggable="true" data-type="logic" title="LOGICブロック" tabindex="0">
-            <div class="lib-icon">∴</div>
+            <div class="lib-icon"><span class="icon icon-logic"><svg viewBox="0 0 24 24">
+                  <polyline points="16 3 21 3 21 8" />
+                  <line x1="4" y1="20" x2="21" y2="3" />
+                  <polyline points="21 16 21 21 16 21" />
+                  <line x1="15" y1="15" x2="21" y2="21" />
+                  <line x1="4" y1="4" x2="9" y2="9" />
+                </svg></span></div>
             <div class="lib-name">LOGIC</div>
           </div>
           <div class="lib-item" draggable="true" data-type="python" title="CODEブロック（type: python）" tabindex="0">
-            <div class="lib-icon">⌘</div>
+            <div class="lib-icon"><span class="icon icon-code"><svg viewBox="0 0 24 24">
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                </svg></span></div>
             <div class="lib-name">CODE</div>
           </div>
           <div class="lib-item" draggable="true" data-type="end" title="ENDブロック（type: end）" tabindex="0">
-            <div class="lib-icon">🏁</div>
+            <div class="lib-icon"><span class="icon icon-end"><svg viewBox="0 0 24 24">
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                  <line x1="4" y1="22" x2="4" y2="15" />
+                </svg></span></div>
             <div class="lib-name">END</div>
           </div>
         </div>
@@ -133,7 +168,11 @@
       <header class="modal-head">
         <h3 id="editorTitle">Block Editor</h3>
         <!-- 変更: ブロックの×と同意匠にするため del を付与 -->
-        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+        <button class="del icon-close" value="cancel" aria-label="close" type="button"
+          onclick="this.closest('dialog').close()"><span class="icon icon-x"><svg viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></span></button>
       </header>
       <div class="modal-body" id="editorBody">
         <!-- JSでブロック別フォームを生成 -->
@@ -150,10 +189,15 @@
     <form method="dialog" id="yamlForm">
       <header class="modal-head">
         <h3>YAML Preview</h3>
-        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+        <button class="del icon-close" value="cancel" aria-label="close" type="button"
+          onclick="this.closest('dialog').close()"><span class="icon icon-x"><svg viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></span></button>
       </header>
       <div class="modal-body">
-        <textarea id="yamlPreview" spellcheck="false" aria-label="YAML preview" style="width:100%; height:60vh;"></textarea>
+        <textarea id="yamlPreview" spellcheck="false" aria-label="YAML preview"
+          style="width:100%; height:60vh;"></textarea>
       </div>
       <footer class="modal-foot">
         <button class="ghost" value="cancel" type="button" onclick="this.closest('dialog').close()">Close</button>
@@ -167,14 +211,19 @@
     <form method="dialog" id="modelForm">
       <header class="modal-head">
         <h3 id="modelModalTitle">Model Settings</h3>
-        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+        <button class="del icon-close" value="cancel" aria-label="close" type="button"
+          onclick="this.closest('dialog').close()"><span class="icon icon-x"><svg viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></span></button>
       </header>
       <div class="modal-body" id="modelModalBody">
         <!-- JSでモデル設定フォームを生成 -->
       </div>
       <footer class="modal-foot">
         <button class="ghost" value="cancel" type="button" onclick="this.closest('dialog').close()">Cancel</button>
-        <button id="btnSaveModel" class="accent" value="default" type="button" onclick="this.closest('dialog').close()">Save</button>
+        <button id="btnSaveModel" class="accent" value="default" type="button"
+          onclick="this.closest('dialog').close()">Save</button>
       </footer>
     </form>
   </dialog>
@@ -184,7 +233,11 @@
     <form method="dialog" id="v2SettingsForm">
       <header class="modal-head">
         <h3>MABEL v2 設定</h3>
-        <button class="del icon-close" value="cancel" aria-label="close" type="button" onclick="this.closest('dialog').close()">✕</button>
+        <button class="del icon-close" value="cancel" aria-label="close" type="button"
+          onclick="this.closest('dialog').close()"><span class="icon icon-x"><svg viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></span></button>
       </header>
       <div class="modal-body" id="v2SettingsBody" style="max-height: 70vh; overflow-y: auto;">
         <!-- JSで設定フォームを生成 -->
@@ -205,4 +258,5 @@
   <script src="{{ url_for('static', filename='js/app.ui.v2settings.js') }}"></script>
   <script src="{{ url_for('static', filename='js/app.ui.init.js') }}"></script>
 </body>
+
 </html>

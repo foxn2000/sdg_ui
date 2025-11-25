@@ -147,7 +147,7 @@ function renderNodes() {
         <div class="node-badges">
           <span class="badge">exec ${b.exec ?? '-'}</span>
           ${b.type === 'ai' ? `<span class="badge">${escapeHtml(b.model || 'model?')}</span>` : ''}
-          <button class="del" title="Delete block" aria-label="Delete block" type="button">✕</button>
+          <button class="del" title="Delete block" aria-label="Delete block" type="button"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
         </div>
       </div>
       <div class="node-body">
@@ -240,7 +240,7 @@ function startDragNode(e, node, b) {
   window.addEventListener('mouseup', onUp);
 }
 
-function nudgeSelected(dx, dy){
+function nudgeSelected(dx, dy) {
   const b = state.blocks.find(x => x.id === selectedBlockId);
   if (!b) return;
   const nx = (b.position?.x ?? 0) + dx;

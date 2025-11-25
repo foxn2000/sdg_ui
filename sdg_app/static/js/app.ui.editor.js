@@ -36,7 +36,7 @@ function openEditor(b) {
   const detected = inferredInputs(b);
   const info = document.createElement('div');
   info.innerHTML = `
-    <p class="small-note">Detected inputs from <span class="kbd">{...}</span>: ${detected.map(x=>`<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</p>
+    <p class="small-note">Detected inputs from <span class="kbd">{...}</span>: ${detected.map(x => `<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</p>
   `;
   editorBody.appendChild(info);
 
@@ -105,8 +105,8 @@ function buildAiForm(b) {
       <div class="form-grid">
         <label>mode</label>
         <select data-k="mode">
-          <option value="text" ${(b.mode||'text')==='text'?'selected':''}>text</option>
-          <option value="json" ${b.mode==='json'?'selected':''}>json</option>
+          <option value="text" ${(b.mode || 'text') === 'text' ? 'selected' : ''}>text</option>
+          <option value="json" ${b.mode === 'json' ? 'selected' : ''}>json</option>
         </select>
       </div>
     </details>
@@ -115,7 +115,7 @@ function buildAiForm(b) {
       <fieldset class="inline-list" id="aiOutputs">
         <div class="hdr"><div>name</div><div>select</div><div>tag/path</div><div>regex</div><div>type_hint</div><div>del</div></div>
         <div class="small-note">name / select(full/tag/regex/jsonpath) / tag or path / regex / type_hint / join_with</div>
-        ${ (b.outputs || []).map((o, i) => aiOutputRow(o, i)).join('') }
+        ${(b.outputs || []).map((o, i) => aiOutputRow(o, i)).join('')}
         <button type="button" class="accent" id="btnAddOut">+ add output</button>
       </fieldset>
     </details>
@@ -123,15 +123,14 @@ function buildAiForm(b) {
     <details class="full"><summary>save_to（v2: 出力をグローバル変数に保存）</summary>
       <div class="form-grid">
         <label class="full">変数名: 出力名（例: memo: Answer）</label>
-        <textarea class="full" rows="2" data-k="save_to_vars" placeholder="memo: Answer">${ 
-          b.save_to?.vars ? Object.entries(b.save_to.vars).map(([k,v]) => `${k}: ${v}`).join('\n') : ''
-        }</textarea>
+        <textarea class="full" rows="2" data-k="save_to_vars" placeholder="memo: Answer">${b.save_to?.vars ? Object.entries(b.save_to.vars).map(([k, v]) => `${k}: ${v}`).join('\n') : ''
+    }</textarea>
       </div>
     </details>
 
     <details class="full"><summary>params（任意・モデルdefaultsを上書き）</summary>
       <div class="form-grid">
-        ${['temperature','top_p','max_tokens'].map(k => `
+        ${['temperature', 'top_p', 'max_tokens'].map(k => `
           <label>${k}</label><input data-param="${k}" value="${b.params?.[k] ?? ''}">
         `).join('')}
         <label>stop（カンマ区切り）</label><input data-param="stop" value="${(b.params?.stop || []).join(',')}">
@@ -145,9 +144,9 @@ function buildAiForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
-          <option value="retry" ${b.on_error==='retry'?'selected':''}>retry</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
+          <option value="retry" ${b.on_error === 'retry' ? 'selected' : ''}>retry</option>
         </select>
         <label class="full">retry（JSON: {"max_attempts":2, "backoff":{"type":"exponential","base_ms":500}}）</label>
         <input data-k="retry" class="full" value='${b.retry ? escapeAttr(JSON.stringify(b.retry)) : ''}'>
@@ -165,7 +164,7 @@ function buildAiForm(b) {
   wrap.addEventListener('click', (e) => {
     if (e.target.id === 'btnAddOut') {
       const fieldset = el('#aiOutputs', wrap);
-      const o = { name: 'Out_' + Math.random().toString(36).slice(2,6), select: 'full', tag:'', regex:'', path:'', type_hint:'', join_with:'' };
+      const o = { name: 'Out_' + Math.random().toString(36).slice(2, 6), select: 'full', tag: '', regex: '', path: '', type_hint: '', join_with: '' };
       fieldset.insertAdjacentHTML('beforeend', aiOutputRow(o, 0));
     }
     if (e.target.matches('[data-act="delOut"]')) {
@@ -184,15 +183,15 @@ function aiOutputRow(o, i) {
     <div class="row">
       <input placeholder="name" data-o="name" value="${escapeAttr(o.name || '')}">
       <select data-o="select">
-        <option value="full" ${(o.select||'full')==='full'?'selected':''}>full</option>
-        <option value="tag" ${o.select==='tag'?'selected':''}>tag</option>
-        <option value="regex" ${o.select==='regex'?'selected':''}>regex</option>
-        <option value="jsonpath" ${o.select==='jsonpath'?'selected':''}>jsonpath</option>
+        <option value="full" ${(o.select || 'full') === 'full' ? 'selected' : ''}>full</option>
+        <option value="tag" ${o.select === 'tag' ? 'selected' : ''}>tag</option>
+        <option value="regex" ${o.select === 'regex' ? 'selected' : ''}>regex</option>
+        <option value="jsonpath" ${o.select === 'jsonpath' ? 'selected' : ''}>jsonpath</option>
       </select>
       <input placeholder="tag/path" data-o="tag_or_path" value="${escapeAttr(o.tag || o.path || '')}">
       <input placeholder="regex" data-o="regex" value="${escapeAttr(o.regex || '')}">
       <input placeholder="type_hint" data-o="type_hint" value="${escapeAttr(o.type_hint || '')}">
-      <button type="button" class="del" data-act="delOut" aria-label="Delete output">✕</button>
+      <button type="button" class="del" data-act="delOut" aria-label="Delete output"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
     </div>
     <div class="row">
       <input class="full" placeholder="join_with（select=tag時の複数結合）" data-o="join_with" value="${escapeAttr(o.join_with || '')}">
@@ -214,7 +213,7 @@ function readAiFormInto(b) {
   const outputs = [];
   for (let i = 0; i < outRows.length; i += 2) {
     const rMain = outRows[i];
-    const rJoin = outRows[i+1];
+    const rJoin = outRows[i + 1];
     if (!rMain) continue;
     const name = el('[data-o="name"]', rMain).value.trim();
     const select = el('[data-o="select"]', rMain).value || 'full';
@@ -226,14 +225,14 @@ function readAiFormInto(b) {
     if (!name) continue;
 
     const o = { name, select };
-    
+
     // selectに応じてtag/path/regexを設定
     if (select === 'tag' && tagOrPath) o.tag = tagOrPath;
     if (select === 'jsonpath' && tagOrPath) o.path = tagOrPath;
     if (select === 'regex' && regex) o.regex = regex;
     if (joinWith) o.join_with = joinWith;
     if (typeHint) o.type_hint = typeHint;
-    
+
     outputs.push(o);
   }
   b.outputs = outputs;
@@ -272,7 +271,7 @@ function readAiFormInto(b) {
   // run_if
   const runIfStr = el('[data-k="run_if"]', editorBody).value.trim();
   b.run_if = runIfStr ? safeParseJson(runIfStr, null) : null;
-  
+
   // on_error
   const oe = el('[data-k="on_error"]', editorBody).value;
   b.on_error = oe || undefined;
@@ -295,18 +294,18 @@ function buildLogicForm(b) {
 
     <label>op</label>
     <select data-k="op">
-      <option value="if" ${b.op==='if'?'selected':''}>if</option>
-      <option value="and" ${b.op==='and'?'selected':''}>and</option>
-      <option value="or" ${b.op==='or'?'selected':''}>or</option>
-      <option value="not" ${b.op==='not'?'selected':''}>not</option>
-      <option value="for" ${b.op==='for'?'selected':''}>for</option>
-      <option value="while" ${b.op==='while'?'selected':''}>while (v2)</option>
-      <option value="set" ${b.op==='set'?'selected':''}>set (v2)</option>
-      <option value="let" ${b.op==='let'?'selected':''}>let (v2)</option>
-      <option value="reduce" ${b.op==='reduce'?'selected':''}>reduce (v2)</option>
-      <option value="call" ${b.op==='call'?'selected':''}>call (v2)</option>
-      <option value="emit" ${b.op==='emit'?'selected':''}>emit (v2)</option>
-      <option value="recurse" ${b.op==='recurse'?'selected':''}>recurse (v2)</option>
+      <option value="if" ${b.op === 'if' ? 'selected' : ''}>if</option>
+      <option value="and" ${b.op === 'and' ? 'selected' : ''}>and</option>
+      <option value="or" ${b.op === 'or' ? 'selected' : ''}>or</option>
+      <option value="not" ${b.op === 'not' ? 'selected' : ''}>not</option>
+      <option value="for" ${b.op === 'for' ? 'selected' : ''}>for</option>
+      <option value="while" ${b.op === 'while' ? 'selected' : ''}>while (v2)</option>
+      <option value="set" ${b.op === 'set' ? 'selected' : ''}>set (v2)</option>
+      <option value="let" ${b.op === 'let' ? 'selected' : ''}>let (v2)</option>
+      <option value="reduce" ${b.op === 'reduce' ? 'selected' : ''}>reduce (v2)</option>
+      <option value="call" ${b.op === 'call' ? 'selected' : ''}>call (v2)</option>
+      <option value="emit" ${b.op === 'emit' ? 'selected' : ''}>emit (v2)</option>
+      <option value="recurse" ${b.op === 'recurse' ? 'selected' : ''}>recurse (v2)</option>
     </select>
 
     <details class="full"><summary>条件・分岐（op=if時）</summary>
@@ -329,10 +328,10 @@ function buildLogicForm(b) {
         <label>parse</label>
         <select data-k="parse">
           <option value="">(default: lines)</option>
-          <option value="lines" ${b.parse==='lines'?'selected':''}>lines</option>
-          <option value="csv" ${b.parse==='csv'?'selected':''}>csv</option>
-          <option value="json" ${b.parse==='json'?'selected':''}>json</option>
-          <option value="regex" ${b.parse==='regex'?'selected':''}>regex</option>
+          <option value="lines" ${b.parse === 'lines' ? 'selected' : ''}>lines</option>
+          <option value="csv" ${b.parse === 'csv' ? 'selected' : ''}>csv</option>
+          <option value="json" ${b.parse === 'json' ? 'selected' : ''}>json</option>
+          <option value="regex" ${b.parse === 'regex' ? 'selected' : ''}>regex</option>
         </select>
         <label>regex_pattern（parse=regex時）</label>
         <input data-k="regex_pattern" class="full" value="${escapeAttr(b.regex_pattern || '')}">
@@ -341,8 +340,8 @@ function buildLogicForm(b) {
         <label>drop_empty</label>
         <select data-k="drop_empty">
           <option value="">(default: true)</option>
-          <option value="true" ${b.drop_empty===true?'selected':''}>true</option>
-          <option value="false" ${b.drop_empty===false?'selected':''}>false</option>
+          <option value="true" ${b.drop_empty === true ? 'selected' : ''}>true</option>
+          <option value="false" ${b.drop_empty === false ? 'selected' : ''}>false</option>
         </select>
         <label>where（条件, JSON）</label>
         <input data-k="where" class="full" value='${b.where ? escapeAttr(JSON.stringify(b.where)) : ''}'>
@@ -432,7 +431,7 @@ function buildLogicForm(b) {
       <fieldset class="inline-list" id="logicOutputs">
         <div class="hdr"><div>name</div><div>from</div><div>source</div><div>join_with</div><div>del</div></div>
         <div class="small-note">name / from(boolean|value|join|count|any|all|first|last|list) / source(raw|filtered|mapped) / join_with / test(JSON) / limit / offset</div>
-        ${ (b.outputs || []).map(o => logicOutputRow(o)).join('') }
+        ${(b.outputs || []).map(o => logicOutputRow(o)).join('')}
         <button type="button" class="accent" id="btnAddLogicOut">+ add output</button>
       </fieldset>
     </details>
@@ -444,8 +443,8 @@ function buildLogicForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
         </select>
       </div>
     </details>
@@ -454,7 +453,7 @@ function buildLogicForm(b) {
   wrap.addEventListener('click', (e) => {
     if (e.target.id === 'btnAddLogicOut') {
       const fs = el('#logicOutputs', wrap);
-      fs.insertAdjacentHTML('beforeend', logicOutputRow({ name: 'Out_' + Math.random().toString(36).slice(2,6), from: 'boolean' }));
+      fs.insertAdjacentHTML('beforeend', logicOutputRow({ name: 'Out_' + Math.random().toString(36).slice(2, 6), from: 'boolean' }));
     }
     if (e.target.dataset.act === 'delOut') {
       const row = e.target.closest('.row');
@@ -472,24 +471,24 @@ function logicOutputRow(o) {
     <div class="row">
       <input placeholder="name" data-o="name" value="${escapeAttr(o.name || '')}">
       <select data-o="from">
-        <option value="boolean" ${o.from==='boolean'?'selected':''}>boolean</option>
-        <option value="value" ${o.from==='value'?'selected':''}>value</option>
-        <option value="join" ${o.from==='join'?'selected':''}>join</option>
-        <option value="count" ${o.from==='count'?'selected':''}>count</option>
-        <option value="any" ${o.from==='any'?'selected':''}>any</option>
-        <option value="all" ${o.from==='all'?'selected':''}>all</option>
-        <option value="first" ${o.from==='first'?'selected':''}>first</option>
-        <option value="last" ${o.from==='last'?'selected':''}>last</option>
-        <option value="list" ${o.from==='list'?'selected':''}>list</option>
+        <option value="boolean" ${o.from === 'boolean' ? 'selected' : ''}>boolean</option>
+        <option value="value" ${o.from === 'value' ? 'selected' : ''}>value</option>
+        <option value="join" ${o.from === 'join' ? 'selected' : ''}>join</option>
+        <option value="count" ${o.from === 'count' ? 'selected' : ''}>count</option>
+        <option value="any" ${o.from === 'any' ? 'selected' : ''}>any</option>
+        <option value="all" ${o.from === 'all' ? 'selected' : ''}>all</option>
+        <option value="first" ${o.from === 'first' ? 'selected' : ''}>first</option>
+        <option value="last" ${o.from === 'last' ? 'selected' : ''}>last</option>
+        <option value="list" ${o.from === 'list' ? 'selected' : ''}>list</option>
       </select>
       <select data-o="source">
-        <option value="" ${!o.source?'selected':''}>(default)</option>
-        <option value="raw" ${o.source==='raw'?'selected':''}>raw</option>
-        <option value="filtered" ${o.source==='filtered'?'selected':''}>filtered</option>
-        <option value="mapped" ${o.source==='mapped'?'selected':''}>mapped</option>
+        <option value="" ${!o.source ? 'selected' : ''}>(default)</option>
+        <option value="raw" ${o.source === 'raw' ? 'selected' : ''}>raw</option>
+        <option value="filtered" ${o.source === 'filtered' ? 'selected' : ''}>filtered</option>
+        <option value="mapped" ${o.source === 'mapped' ? 'selected' : ''}>mapped</option>
       </select>
       <input placeholder="join_with" data-o="join_with" value="${escapeAttr(o.join_with || '')}">
-      <button type="button" class="del" data-act="delOut" aria-label="Delete output">✕</button>
+      <button type="button" class="del" data-act="delOut" aria-label="Delete output"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
     </div>
     <div class="row">
       <input placeholder='test（JSON, any/all用）' data-o="test" value='${o.test ? escapeAttr(JSON.stringify(o.test)) : ''}'>
@@ -639,7 +638,7 @@ function readLogicFormInto(b) {
   const outs = [];
   for (let i = 0; i < rows.length; i += 2) {
     const r1 = rows[i];
-    const r2 = rows[i+1];
+    const r2 = rows[i + 1];
     if (!r1) continue;
     const name = el('[data-o="name"]', r1)?.value.trim() || '';
     if (!name) continue;
@@ -681,7 +680,7 @@ function buildPythonForm(b) {
 
     <label>inputs（複数可・候補から選択/自由入力）</label>
     <input class="full" data-k="inputs" placeholder="例: Answer, Plan" value="${escapeAttr((b.inputs || []).join(', '))}">
-    <div class="small-note full">利用可能な出力: ${allOutputNames().map(x=>`<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</div>
+    <div class="small-note full">利用可能な出力: ${allOutputNames().map(x => `<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</div>
 
     <details class="full"><summary>function_code（v2: インライン関数）</summary>
       <div class="form-grid">
@@ -703,8 +702,8 @@ function buildPythonForm(b) {
       <div class="form-grid">
         <label>use_env</label>
         <select data-k="use_env">
-          <option value="global" ${(b.use_env||'global')==='global'?'selected':''}>global（既定）</option>
-          <option value="override" ${b.use_env==='override'?'selected':''}>override</option>
+          <option value="global" ${(b.use_env || 'global') === 'global' ? 'selected' : ''}>global（既定）</option>
+          <option value="override" ${b.use_env === 'override' ? 'selected' : ''}>override</option>
         </select>
         <label class="full">timeout_ms</label>
         <input data-k="timeout_ms" type="number" value="${b.timeout_ms ?? ''}">
@@ -715,13 +714,13 @@ function buildPythonForm(b) {
 
     <details class="full"><summary>outputs（必須）</summary>
       <fieldset class="inline-list" id="pyOutputs">
-        ${ (b.py_outputs || []).map(o => `
+        ${(b.py_outputs || []).map(o => `
           <div class="row python">
             <input placeholder="output name" data-o="py_out" value="${escapeAttr(o)}">
             <div></div>
-            <button type="button" class="del" data-act="delPyOut" aria-label="Delete output">✕</button>
+            <button type="button" class="del" data-act="delPyOut" aria-label="Delete output"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
           </div>
-        `).join('') }
+        `).join('')}
         <button type="button" class="accent" id="btnAddPyOut">+ add output</button>
       </fieldset>
     </details>
@@ -733,9 +732,9 @@ function buildPythonForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
-          <option value="retry" ${b.on_error==='retry'?'selected':''}>retry</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
+          <option value="retry" ${b.on_error === 'retry' ? 'selected' : ''}>retry</option>
         </select>
         <label class="full">retry（JSON）</label>
         <input data-k="retry" class="full" value='${b.retry ? escapeAttr(JSON.stringify(b.retry)) : ''}'>
@@ -750,7 +749,7 @@ function buildPythonForm(b) {
         <div class="row python">
           <input placeholder="output name" data-o="py_out">
           <div></div>
-          <button type="button" class="del" data-act="delPyOut" aria-label="Delete output">✕</button>
+          <button type="button" class="del" data-act="delPyOut" aria-label="Delete output"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
         </div>
       `);
     }
@@ -763,22 +762,22 @@ function buildPythonForm(b) {
 function readPythonFormInto(b) {
   b.py_name = el('[data-k="py_name"]', editorBody).value.trim();
   b.function = el('[data-k="function"]', editorBody).value.trim();
-  b.inputs = el('[data-k="inputs"]', editorBody).value.split(',').map(s=>s.trim()).filter(Boolean);
-  
+  b.inputs = el('[data-k="inputs"]', editorBody).value.split(',').map(s => s.trim()).filter(Boolean);
+
   // function_code (v2)
   const funcCode = el('[data-k="function_code"]', editorBody)?.value.trim() || '';
   b.function_code = funcCode || undefined;
-  
+
   b.code_path = el('[data-k="code_path"]', editorBody).value.trim();
   b.venv_path = el('[data-k="venv_path"]', editorBody).value.trim();
 
   // v2拡張設定
   const useEnv = el('[data-k="use_env"]', editorBody)?.value || 'global';
   b.use_env = useEnv !== 'global' ? useEnv : undefined;
-  
+
   const timeoutMs = el('[data-k="timeout_ms"]', editorBody)?.value.trim() || '';
   b.timeout_ms = timeoutMs ? toMaybeNumber(timeoutMs) : undefined;
-  
+
   const ctxAccess = el('[data-k="ctx_access"]', editorBody)?.value.trim() || '';
   b.ctx_access = ctxAccess ? ctxAccess.split(',').map(s => s.trim()).filter(Boolean) : undefined;
 
@@ -792,7 +791,7 @@ function readPythonFormInto(b) {
   b.run_if = runIfStr ? safeParseJson(runIfStr, null) : null;
   const oe = el('[data-k="on_error"]', editorBody).value;
   b.on_error = oe || undefined;
-  
+
   // retry (v2)
   const retryStr = el('[data-k="retry"]', editorBody)?.value.trim() || '';
   b.retry = retryStr ? safeParseJson(retryStr, null) : undefined;
@@ -810,7 +809,7 @@ function buildEndForm(b) {
     <details class="full" open><summary>final（最終出力ペイロード）</summary>
       <fieldset class="inline-list" id="endFinals">
         <div class="hdr"><div>name</div><div></div><div></div><div>value</div><div>del</div></div>
-        ${ (b.final || []).map(f => endFinalRow(f)).join('') }
+        ${(b.final || []).map(f => endFinalRow(f)).join('')}
         <button type="button" class="accent" id="btnAddFinal">+ add final</button>
       </fieldset>
     </details>
@@ -822,8 +821,8 @@ function buildEndForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
         </select>
       </div>
     </details>
@@ -848,7 +847,7 @@ function endFinalRow(f) {
       <input placeholder="name" data-f="name" value="${escapeAttr(f.name || '')}">
       <div></div><div></div>
       <input placeholder="value" data-f="value" value="${escapeAttr(f.value || '')}">
-      <button type="button" class="del" data-act="delFinal" aria-label="Delete final">✕</button>
+      <button type="button" class="del" data-act="delFinal" aria-label="Delete final"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
     </div>
   `;
 }
@@ -874,10 +873,10 @@ function readEndFormInto(b) {
 function allOutputNames() {
   const names = [];
   state.blocks.forEach(b => {
-    if (b.type === 'start') (b.outputs||[]).forEach(n => { if (n) names.push(n); });
-    if (b.type === 'ai') (b.outputs||[]).forEach(o => { if (o.name) names.push(o.name); });
-    if (b.type === 'logic') (b.outputs||[]).forEach(o => { if (o.name) names.push(o.name); });
-    if (b.type === 'python') (b.py_outputs||[]).forEach(n => { if (n) names.push(n); });
+    if (b.type === 'start') (b.outputs || []).forEach(n => { if (n) names.push(n); });
+    if (b.type === 'ai') (b.outputs || []).forEach(o => { if (o.name) names.push(o.name); });
+    if (b.type === 'logic') (b.outputs || []).forEach(o => { if (o.name) names.push(o.name); });
+    if (b.type === 'python') (b.py_outputs || []).forEach(n => { if (n) names.push(n); });
   });
   return names;
 }

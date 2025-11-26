@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Arrow keys: nudge
-    if (selectedBlockId && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+    if (selectedBlockId && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
       e.preventDefault();
       const step = GRID;
       let dx = 0, dy = 0;
@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMod = e.ctrlKey || e.metaKey;
     if (isMod && (e.key === '+' || e.key === '=')) {
       e.preventDefault();
-      zoomBy(1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
+      zoomBy(1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
     } else if (isMod && e.key === '-') {
       e.preventDefault();
-      zoomBy(1/1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
+      zoomBy(1 / 1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
     } else if (isMod && (e.key === '0' || e.key === 'Backspace')) {
       e.preventDefault();
       resetZoom();
@@ -141,10 +141,10 @@ function renderModelsPanel() {
         const path = t.dataset.kdef;
         model.request_defaults = model.request_defaults || {};
         if (path.includes('.')) {
-          const [a,b] = path.split('.');
+          const [a, b] = path.split('.');
           model.request_defaults[a] = model.request_defaults[a] || {};
           if (b === 'backoff') {
-            try { model.request_defaults[a][b] = JSON.parse(t.value || '{}'); } catch {}
+            try { model.request_defaults[a][b] = JSON.parse(t.value || '{}'); } catch { }
           } else {
             model.request_defaults[a][b] = toMaybeNumber(t.value);
           }
@@ -154,7 +154,7 @@ function renderModelsPanel() {
       } else if (t.matches('[data-kopt]')) {
         const k = t.dataset.kopt;
         if (k === 'headers') {
-          try { model.headers = JSON.parse(t.value || 'null'); } catch {}
+          try { model.headers = JSON.parse(t.value || 'null'); } catch { }
         } else {
           model[k] = t.value;
         }
@@ -194,7 +194,7 @@ function renderModelsPanel() {
 }
 
 function defaultsFields(def) {
-  const fields = ['temperature','top_p','max_tokens','timeout_sec'];
+  const fields = ['temperature', 'top_p', 'max_tokens', 'timeout_sec'];
   return `
     ${fields.map(k => `
       <label>${k}</label>
@@ -437,7 +437,7 @@ function startDragNode(e, node, b) {
   window.addEventListener('mouseup', onUp);
 }
 
-function nudgeSelected(dx, dy){
+function nudgeSelected(dx, dy) {
   const b = state.blocks.find(x => x.id === selectedBlockId);
   if (!b) return;
   const nx = (b.position?.x ?? 0) + dx;
@@ -459,8 +459,8 @@ function nudgeSelected(dx, dy){
 function bindCanvasPanning() {
   let spaceDown = false;
   let panning = false;
-  let start = { x:0, y:0 };
-  let origin = { x:0, y:0 };
+  let start = { x: 0, y: 0 };
+  let origin = { x: 0, y: 0 };
 
   const startPan = (ev) => {
     panning = true;
@@ -541,7 +541,7 @@ function zoomBy(factor, anchorScreen) {
 }
 
 function resetZoom() {
-  setScale(1, { x: canvas.clientWidth/2, y: canvas.clientHeight/2 });
+  setScale(1, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
 }
 
 function fitToContent() {
@@ -549,16 +549,16 @@ function fitToContent() {
   const b = contentBounds();
   const W = canvas.clientWidth, H = canvas.clientHeight;
   const margin = 60; // px (screen)
-  const sFit = clamp(Math.min((W - 2*margin) / Math.max(b.w, 1), (H - 2*margin) / Math.max(b.h, 1)), MIN_ZOOM, MAX_ZOOM);
+  const sFit = clamp(Math.min((W - 2 * margin) / Math.max(b.w, 1), (H - 2 * margin) / Math.max(b.h, 1)), MIN_ZOOM, MAX_ZOOM);
   viewport.s = sFit;
   // 中央配置（ワールド→スクリーン: (x + vx)*s ）
-  viewport.x = (W/(2*sFit)) - (b.x + b.w/2);
-  viewport.y = (H/(2*sFit)) - (b.y + b.h/2);
+  viewport.x = (W / (2 * sFit)) - (b.x + b.w / 2);
+  viewport.y = (H / (2 * sFit)) - (b.y + b.h / 2);
   applyViewport();
   raf(drawConnections);
 }
 
-function setScale(newScale, anchorScreen = {x: canvas.clientWidth/2, y: canvas.clientHeight/2}) {
+function setScale(newScale, anchorScreen = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }) {
   const s0 = viewport.s;
   const s1 = clamp(newScale, MIN_ZOOM, MAX_ZOOM);
   if (Math.abs(s1 - s0) < 1e-4) return;
@@ -588,8 +588,8 @@ function mountZoomHud() {
   `;
   canvas.appendChild(hud);
 
-  el('#zoomOut', hud).onclick = () => zoomBy(1/1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
-  el('#zoomIn', hud).onclick = () => zoomBy(1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
+  el('#zoomOut', hud).onclick = () => zoomBy(1 / 1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
+  el('#zoomIn', hud).onclick = () => zoomBy(1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
   el('#zoomFit', hud).onclick = () => fitToContent();
   el('#zoomReset', hud).onclick = () => resetZoom();
   updateZoomHud();
@@ -606,10 +606,17 @@ function updateZoomHud() {
 // -------------------------
 function bindGlobalButtons() {
   el('#btnGenerate').onclick = () => {
-    const yaml = toYAML(state);
-    yamlPreview.value = yaml;
-    if (previewWrap && !previewWrap.open) previewWrap.open = true;
-    downloadText('mabel.yaml', yaml);
+    try {
+      const yaml = toYAML(state);
+      yamlPreview.value = yaml;
+      if (previewWrap && !previewWrap.open) previewWrap.open = true;
+      downloadText('mabel.yaml', yaml);
+    } catch (err) {
+      console.error('YAML generation error:', err);
+      alert('YAMLの生成に失敗しました。詳細はコンソールを確認してください。\n\nエラー: ' + err.message);
+      yamlPreview.value = '# エラー: YAML生成に失敗しました\n# ' + err.message;
+      if (previewWrap && !previewWrap.open) previewWrap.open = true;
+    }
   };
   el('#btnClear').onclick = () => {
     if (!confirm('Clear all models & blocks?')) return;
@@ -641,10 +648,10 @@ function bindImport() {
     fileInput.value = '';
   });
 
-  ['dragenter','dragover'].forEach(ev =>
+  ['dragenter', 'dragover'].forEach(ev =>
     importDrop.addEventListener(ev, (e) => { e.preventDefault(); importDrop.classList.add('drag'); })
   );
-  ['dragleave','drop'].forEach(ev =>
+  ['dragleave', 'drop'].forEach(ev =>
     importDrop.addEventListener(ev, (e) => { e.preventDefault(); importDrop.classList.remove('drag'); })
   );
   importDrop.addEventListener('drop', async (e) => {
@@ -686,7 +693,7 @@ function openEditor(b) {
   const detected = inferredInputs(b);
   const info = document.createElement('div');
   info.innerHTML = `
-    <p class="small-note">Detected inputs from <span class="kbd">{...}</span>: ${detected.map(x=>`<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</p>
+    <p class="small-note">Detected inputs from <span class="kbd">{...}</span>: ${detected.map(x => `<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</p>
   `;
   editorBody.appendChild(info);
 
@@ -737,14 +744,14 @@ function buildAiForm(b) {
       <fieldset class="inline-list" id="aiOutputs">
         <div class="hdr"><div>name</div><div>select</div><div>tag</div><div>regex</div><div>del</div></div>
         <div class="small-note">name / select / tag / regex / join_with（selectに応じて必要のみ）</div>
-        ${ (b.outputs || []).map((o, i) => aiOutputRow(o, i)).join('') }
+        ${(b.outputs || []).map((o, i) => aiOutputRow(o, i)).join('')}
         <button type="button" class="accent" id="btnAddOut">+ add output</button>
       </fieldset>
     </details>
 
     <details class="full"><summary>params（任意・モデルdefaultsを上書き）</summary>
       <div class="form-grid">
-        ${['temperature','top_p','max_tokens'].map(k => `
+        ${['temperature', 'top_p', 'max_tokens'].map(k => `
           <label>${k}</label><input data-param="${k}" value="${b.params?.[k] ?? ''}">
         `).join('')}
         <label>stop（カンマ区切り）</label><input data-param="stop" value="${(b.params?.stop || []).join(',')}">
@@ -758,8 +765,8 @@ function buildAiForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
         </select>
       </div>
     </details>
@@ -768,7 +775,7 @@ function buildAiForm(b) {
   wrap.addEventListener('click', (e) => {
     if (e.target.id === 'btnAddOut') {
       const fieldset = el('#aiOutputs', wrap);
-      const o = { name: 'Out_' + Math.random().toString(36).slice(2,6), select: 'full', tag:'', regex:'', join_with:'' };
+      const o = { name: 'Out_' + Math.random().toString(36).slice(2, 6), select: 'full', tag: '', regex: '', join_with: '' };
       fieldset.insertAdjacentHTML('beforeend', aiOutputRow(o, 0));
     }
     if (e.target.matches('[data-act="delOut"]')) {
@@ -787,9 +794,9 @@ function aiOutputRow(o, i) {
     <div class="row">
       <input placeholder="name" data-o="name" value="${escapeAttr(o.name || '')}">
       <select data-o="select">
-        <option value="full" ${o.select==='full'?'selected':''}>full</option>
-        <option value="tag" ${o.select==='tag'?'selected':''}>tag</option>
-        <option value="regex" ${o.select==='regex'?'selected':''}>regex</option>
+        <option value="full" ${o.select === 'full' ? 'selected' : ''}>full</option>
+        <option value="tag" ${o.select === 'tag' ? 'selected' : ''}>tag</option>
+        <option value="regex" ${o.select === 'regex' ? 'selected' : ''}>regex</option>
       </select>
       <input placeholder="tag (when select=tag)" data-o="tag" value="${escapeAttr(o.tag || '')}">
       <input placeholder="regex (when select=regex)" data-o="regex" value="${escapeAttr(o.regex || '')}">
@@ -810,7 +817,7 @@ function readAiFormInto(b) {
   const outputs = [];
   for (let i = 0; i < outRows.length; i += 2) {
     const rMain = outRows[i];
-    const rJoin = outRows[i+1];
+    const rJoin = outRows[i + 1];
     if (!rMain) continue;
     const o = {
       name: el('[data-o="name"]', rMain).value.trim(),
@@ -851,11 +858,11 @@ function buildLogicForm(b) {
 
     <label>op</label>
     <select data-k="op">
-      <option value="if" ${b.op==='if'?'selected':''}>if</option>
-      <option value="and" ${b.op==='and'?'selected':''}>and</option>
-      <option value="or" ${b.op==='or'?'selected':''}>or</option>
-      <option value="not" ${b.op==='not'?'selected':''}>not</option>
-      <option value="for" ${b.op==='for'?'selected':''}>for</option>
+      <option value="if" ${b.op === 'if' ? 'selected' : ''}>if</option>
+      <option value="and" ${b.op === 'and' ? 'selected' : ''}>and</option>
+      <option value="or" ${b.op === 'or' ? 'selected' : ''}>or</option>
+      <option value="not" ${b.op === 'not' ? 'selected' : ''}>not</option>
+      <option value="for" ${b.op === 'for' ? 'selected' : ''}>for</option>
     </select>
 
     <details class="full"><summary>条件・分岐（op=if時）</summary>
@@ -878,10 +885,10 @@ function buildLogicForm(b) {
         <label>parse</label>
         <select data-k="parse">
           <option value="">(default: lines)</option>
-          <option value="lines" ${b.parse==='lines'?'selected':''}>lines</option>
-          <option value="csv" ${b.parse==='csv'?'selected':''}>csv</option>
-          <option value="json" ${b.parse==='json'?'selected':''}>json</option>
-          <option value="regex" ${b.parse==='regex'?'selected':''}>regex</option>
+          <option value="lines" ${b.parse === 'lines' ? 'selected' : ''}>lines</option>
+          <option value="csv" ${b.parse === 'csv' ? 'selected' : ''}>csv</option>
+          <option value="json" ${b.parse === 'json' ? 'selected' : ''}>json</option>
+          <option value="regex" ${b.parse === 'regex' ? 'selected' : ''}>regex</option>
         </select>
         <label>regex_pattern（parse=regex時）</label>
         <input data-k="regex_pattern" class="full" value="${escapeAttr(b.regex_pattern || '')}">
@@ -890,8 +897,8 @@ function buildLogicForm(b) {
         <label>drop_empty</label>
         <select data-k="drop_empty">
           <option value="">(default: true)</option>
-          <option value="true" ${b.drop_empty===true?'selected':''}>true</option>
-          <option value="false" ${b.drop_empty===false?'selected':''}>false</option>
+          <option value="true" ${b.drop_empty === true ? 'selected' : ''}>true</option>
+          <option value="false" ${b.drop_empty === false ? 'selected' : ''}>false</option>
         </select>
         <label>where（条件, JSON）</label>
         <input data-k="where" class="full" value='${b.where ? escapeAttr(JSON.stringify(b.where)) : ''}'>
@@ -904,7 +911,7 @@ function buildLogicForm(b) {
       <fieldset class="inline-list" id="logicOutputs">
         <div class="hdr"><div>name</div><div>from</div><div>source</div><div>join_with</div><div>del</div></div>
         <div class="small-note">name / from(boolean|value|join|count|any|all|first|last|list) / source(raw|filtered|mapped) / join_with / test(JSON) / limit / offset</div>
-        ${ (b.outputs || []).map(o => logicOutputRow(o)).join('') }
+        ${(b.outputs || []).map(o => logicOutputRow(o)).join('')}
         <button type="button" class="accent" id="btnAddLogicOut">+ add output</button>
       </fieldset>
     </details>
@@ -916,8 +923,8 @@ function buildLogicForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
         </select>
       </div>
     </details>
@@ -926,7 +933,7 @@ function buildLogicForm(b) {
   wrap.addEventListener('click', (e) => {
     if (e.target.id === 'btnAddLogicOut') {
       const fs = el('#logicOutputs', wrap);
-      fs.insertAdjacentHTML('beforeend', logicOutputRow({ name: 'Out_' + Math.random().toString(36).slice(2,6), from: 'boolean' }));
+      fs.insertAdjacentHTML('beforeend', logicOutputRow({ name: 'Out_' + Math.random().toString(36).slice(2, 6), from: 'boolean' }));
     }
     if (e.target.dataset.act === 'delOut') {
       const row = e.target.closest('.row');
@@ -944,21 +951,21 @@ function logicOutputRow(o) {
     <div class="row">
       <input placeholder="name" data-o="name" value="${escapeAttr(o.name || '')}">
       <select data-o="from">
-        <option value="boolean" ${o.from==='boolean'?'selected':''}>boolean</option>
-        <option value="value" ${o.from==='value'?'selected':''}>value</option>
-        <option value="join" ${o.from==='join'?'selected':''}>join</option>
-        <option value="count" ${o.from==='count'?'selected':''}>count</option>
-        <option value="any" ${o.from==='any'?'selected':''}>any</option>
-        <option value="all" ${o.from==='all'?'selected':''}>all</option>
-        <option value="first" ${o.from==='first'?'selected':''}>first</option>
-        <option value="last" ${o.from==='last'?'selected':''}>last</option>
-        <option value="list" ${o.from==='list'?'selected':''}>list</option>
+        <option value="boolean" ${o.from === 'boolean' ? 'selected' : ''}>boolean</option>
+        <option value="value" ${o.from === 'value' ? 'selected' : ''}>value</option>
+        <option value="join" ${o.from === 'join' ? 'selected' : ''}>join</option>
+        <option value="count" ${o.from === 'count' ? 'selected' : ''}>count</option>
+        <option value="any" ${o.from === 'any' ? 'selected' : ''}>any</option>
+        <option value="all" ${o.from === 'all' ? 'selected' : ''}>all</option>
+        <option value="first" ${o.from === 'first' ? 'selected' : ''}>first</option>
+        <option value="last" ${o.from === 'last' ? 'selected' : ''}>last</option>
+        <option value="list" ${o.from === 'list' ? 'selected' : ''}>list</option>
       </select>
       <select data-o="source">
-        <option value="" ${!o.source?'selected':''}>(default)</option>
-        <option value="raw" ${o.source==='raw'?'selected':''}>raw</option>
-        <option value="filtered" ${o.source==='filtered'?'selected':''}>filtered</option>
-        <option value="mapped" ${o.source==='mapped'?'selected':''}>mapped</option>
+        <option value="" ${!o.source ? 'selected' : ''}>(default)</option>
+        <option value="raw" ${o.source === 'raw' ? 'selected' : ''}>raw</option>
+        <option value="filtered" ${o.source === 'filtered' ? 'selected' : ''}>filtered</option>
+        <option value="mapped" ${o.source === 'mapped' ? 'selected' : ''}>mapped</option>
       </select>
       <input placeholder="join_with" data-o="join_with" value="${escapeAttr(o.join_with || '')}">
       <button type="button" class="del" data-act="delOut" aria-label="Delete output">✕</button>
@@ -1007,7 +1014,7 @@ function readLogicFormInto(b) {
   const outs = [];
   for (let i = 0; i < rows.length; i += 2) {
     const r1 = rows[i];
-    const r2 = rows[i+1];
+    const r2 = rows[i + 1];
     if (!r1) continue;
     const name = el('[data-o="name"]', r1)?.value.trim() || '';
     if (!name) continue;
@@ -1049,7 +1056,7 @@ function buildPythonForm(b) {
 
     <label>inputs（複数可・候補から選択/自由入力）</label>
     <input class="full" data-k="inputs" placeholder="例: Answer, Plan" value="${escapeAttr((b.inputs || []).join(', '))}">
-    <div class="small-note full">利用可能な出力: ${allOutputNames().map(x=>`<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</div>
+    <div class="small-note full">利用可能な出力: ${allOutputNames().map(x => `<span class="kbd">${escapeHtml(x)}</span>`).join(' ') || '(none)'}</div>
 
     <label>code_path</label>
     <input class="full" data-k="code_path" value="${escapeAttr(b.code_path || '')}">
@@ -1058,13 +1065,13 @@ function buildPythonForm(b) {
 
     <details class="full"><summary>outputs（必須）</summary>
       <fieldset class="inline-list" id="pyOutputs">
-        ${ (b.py_outputs || []).map(o => `
+        ${(b.py_outputs || []).map(o => `
           <div class="row python">
             <input placeholder="output name" data-o="py_out" value="${escapeAttr(o)}">
             <div></div>
             <button type="button" class="del" data-act="delPyOut" aria-label="Delete output">✕</button>
           </div>
-        `).join('') }
+        `).join('')}
         <button type="button" class="accent" id="btnAddPyOut">+ add output</button>
       </fieldset>
     </details>
@@ -1076,8 +1083,8 @@ function buildPythonForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
         </select>
       </div>
     </details>
@@ -1103,7 +1110,7 @@ function buildPythonForm(b) {
 function readPythonFormInto(b) {
   b.py_name = el('[data-k="py_name"]', editorBody).value.trim();
   b.function = el('[data-k="function"]', editorBody).value.trim();
-  b.inputs = el('[data-k="inputs"]', editorBody).value.split(',').map(s=>s.trim()).filter(Boolean);
+  b.inputs = el('[data-k="inputs"]', editorBody).value.split(',').map(s => s.trim()).filter(Boolean);
   b.code_path = el('[data-k="code_path"]', editorBody).value.trim();
   b.venv_path = el('[data-k="venv_path"]', editorBody).value.trim();
 
@@ -1131,7 +1138,7 @@ function buildEndForm(b) {
     <details class="full" open><summary>final（最終出力ペイロード）</summary>
       <fieldset class="inline-list" id="endFinals">
         <div class="hdr"><div>name</div><div></div><div></div><div>value</div><div>del</div></div>
-        ${ (b.final || []).map(f => endFinalRow(f)).join('') }
+        ${(b.final || []).map(f => endFinalRow(f)).join('')}
         <button type="button" class="accent" id="btnAddFinal">+ add final</button>
       </fieldset>
     </details>
@@ -1143,8 +1150,8 @@ function buildEndForm(b) {
         <label>on_error</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
-          <option value="fail" ${b.on_error==='fail'?'selected':''}>fail</option>
-          <option value="continue" ${b.on_error==='continue'?'selected':''}>continue</option>
+          <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
+          <option value="continue" ${b.on_error === 'continue' ? 'selected' : ''}>continue</option>
         </select>
       </div>
     </details>
@@ -1195,9 +1202,9 @@ function readEndFormInto(b) {
 function allOutputNames() {
   const names = [];
   state.blocks.forEach(b => {
-    if (b.type === 'ai') (b.outputs||[]).forEach(o => { if (o.name) names.push(o.name); });
-    if (b.type === 'logic') (b.outputs||[]).forEach(o => { if (o.name) names.push(o.name); });
-    if (b.type === 'python') (b.py_outputs||[]).forEach(n => { if (n) names.push(n); });
+    if (b.type === 'ai') (b.outputs || []).forEach(o => { if (o.name) names.push(o.name); });
+    if (b.type === 'logic') (b.outputs || []).forEach(o => { if (o.name) names.push(o.name); });
+    if (b.type === 'python') (b.py_outputs || []).forEach(n => { if (n) names.push(n); });
   });
   return names;
 }

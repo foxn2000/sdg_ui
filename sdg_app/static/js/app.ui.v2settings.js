@@ -1,6 +1,7 @@
 // =========================
-/* MABEL Studio Frontend (ui.v2settings: MABEL v2設定UI)
- * - runtime, budgets, globals, templates, files, functions, connectionsの編集
+/* MABEL Studio Frontend (ui.v2settings: MABEL v2.1設定UI)
+ * - runtime, budgets, globals, images, templates, files, functions, connectionsの編集
+ * - v2.1: 画像入力機能追加
  */
 // =========================
 
@@ -18,7 +19,7 @@ function openV2Settings() {
 // v2設定フォームの構築
 function buildV2SettingsForm() {
   const s = state;
-  
+
   return `
     <div class="form-grid">
       <!-- MABEL メタデータ -->
@@ -26,7 +27,7 @@ function buildV2SettingsForm() {
         <summary><h3>MABELメタデータ</h3></summary>
         <div class="form-grid">
           <label>version</label>
-          <input data-v2="mabel.version" value="${escapeAttr(s.mabel?.version || '2.0')}" readonly>
+          <input data-v2="mabel.version" value="${escapeAttr(s.mabel?.version || '2.1')}" readonly>
           <label>id</label>
           <input data-v2="mabel.id" value="${escapeAttr(s.mabel?.id || '')}" placeholder="com.example.agent.myagent">
           <label class="full">name</label>
@@ -51,12 +52,12 @@ function buildV2SettingsForm() {
           <textarea class="full" rows="3" data-v2="runtime.python.requirements" placeholder="numpy>=1.20.0\npandas>=1.3.0">${escapeHtml(Array.isArray(s.runtime?.python?.requirements) ? s.runtime.python.requirements.join('\n') : '')}</textarea>
           <label>allow_network</label>
           <select data-v2="runtime.python.allow_network">
-            <option value="true" ${s.runtime?.python?.allow_network === true?'selected':''}>true</option>
-            <option value="false" ${s.runtime?.python?.allow_network === false?'selected':''}>false</option>
-            <option value="" ${s.runtime?.python?.allow_network === undefined?'selected':''}>(未設定)</option>
+            <option value="true" ${s.runtime?.python?.allow_network === true ? 'selected' : ''}>true</option>
+            <option value="false" ${s.runtime?.python?.allow_network === false ? 'selected' : ''}>false</option>
+            <option value="" ${s.runtime?.python?.allow_network === undefined ? 'selected' : ''}>(未設定)</option>
           </select>
           <label class="full">env（環境変数、1行1つ: KEY=value）</label>
-          <textarea class="full" rows="3" data-v2="runtime.python.env" placeholder="DEBUG=true\nLOG_LEVEL=info">${escapeHtml(s.runtime?.python?.env ? Object.entries(s.runtime.python.env).map(([k,v])=>`${k}=${v}`).join('\n') : '')}</textarea>
+          <textarea class="full" rows="3" data-v2="runtime.python.env" placeholder="DEBUG=true\nLOG_LEVEL=info">${escapeHtml(s.runtime?.python?.env ? Object.entries(s.runtime.python.env).map(([k, v]) => `${k}=${v}`).join('\n') : '')}</textarea>
         </div>
       </details>
 
@@ -70,9 +71,9 @@ function buildV2SettingsForm() {
           <label>on_exceed</label>
           <select data-v2="budgets.loops.on_exceed">
             <option value="">(未設定)</option>
-            <option value="error" ${s.budgets?.loops?.on_exceed==='error'?'selected':''}>error</option>
-            <option value="truncate" ${s.budgets?.loops?.on_exceed==='truncate'?'selected':''}>truncate</option>
-            <option value="warn" ${s.budgets?.loops?.on_exceed==='warn'?'selected':''}>warn</option>
+            <option value="error" ${s.budgets?.loops?.on_exceed === 'error' ? 'selected' : ''}>error</option>
+            <option value="truncate" ${s.budgets?.loops?.on_exceed === 'truncate' ? 'selected' : ''}>truncate</option>
+            <option value="warn" ${s.budgets?.loops?.on_exceed === 'warn' ? 'selected' : ''}>warn</option>
           </select>
 
           <label class="full">Recursion</label>
@@ -81,9 +82,9 @@ function buildV2SettingsForm() {
           <label>on_exceed</label>
           <select data-v2="budgets.recursion.on_exceed">
             <option value="">(未設定)</option>
-            <option value="error" ${s.budgets?.recursion?.on_exceed==='error'?'selected':''}>error</option>
-            <option value="truncate" ${s.budgets?.recursion?.on_exceed==='truncate'?'selected':''}>truncate</option>
-            <option value="warn" ${s.budgets?.recursion?.on_exceed==='warn'?'selected':''}>warn</option>
+            <option value="error" ${s.budgets?.recursion?.on_exceed === 'error' ? 'selected' : ''}>error</option>
+            <option value="truncate" ${s.budgets?.recursion?.on_exceed === 'truncate' ? 'selected' : ''}>truncate</option>
+            <option value="warn" ${s.budgets?.recursion?.on_exceed === 'warn' ? 'selected' : ''}>warn</option>
           </select>
 
           <label class="full">wall_time_ms（全体タイムアウト）</label>
@@ -106,6 +107,18 @@ function buildV2SettingsForm() {
           
           <label class="full">vars（変数、1行1つ: KEY: value または KEY: {json}）</label>
           <textarea class="full" rows="4" data-v2="globals.vars" placeholder="counter: 0\nresult: []">${escapeHtml(s.globals?.vars ? formatGlobalsForTextarea(s.globals.vars) : '')}</textarea>
+        </div>
+      </details>
+
+      <!-- Images (v2.1) -->
+      <details class="full">
+        <summary><h3>Images（静的画像定義）<span class="badge">v2.1</span></h3></summary>
+        <div class="form-grid">
+          <div class="small-note full">プロンプト内で <code>{name.img}</code> として参照できる静的画像を定義します。</div>
+          <div class="full" id="imagesContainer">
+            ${(s.images || []).map((img, i) => buildImageRow(img, i)).join('')}
+          </div>
+          <button type="button" class="accent full" id="btnAddImage">+ 画像追加</button>
         </div>
       </details>
 
@@ -178,10 +191,10 @@ function parseGlobalsFromTextarea(text) {
     if (colonIdx === -1) return;
     const key = line.substring(0, colonIdx).trim();
     const valueStr = line.substring(colonIdx + 1).trim();
-    
+
     // JSONオブジェクトか配列の場合
-    if ((valueStr.startsWith('{') && valueStr.endsWith('}')) || 
-        (valueStr.startsWith('[') && valueStr.endsWith(']'))) {
+    if ((valueStr.startsWith('{') && valueStr.endsWith('}')) ||
+      (valueStr.startsWith('[') && valueStr.endsWith(']'))) {
       try {
         result[key] = JSON.parse(valueStr);
       } catch (e) {
@@ -194,6 +207,31 @@ function parseGlobalsFromTextarea(text) {
     }
   });
   return result;
+}
+
+// 画像行の構築 (v2.1)
+function buildImageRow(img, i) {
+  return `
+    <fieldset class="form-grid" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
+      <legend>Image ${i + 1}</legend>
+      <label>name（必須）</label>
+      <input data-image-idx="${i}" data-image-k="name" value="${escapeAttr(img.name || '')}" placeholder="logo">
+      <label>path（ローカルファイル）</label>
+      <input class="full" data-image-idx="${i}" data-image-k="path" value="${escapeAttr(img.path || '')}" placeholder="./assets/logo.png">
+      <label>url（Web画像）</label>
+      <input class="full" data-image-idx="${i}" data-image-k="url" value="${escapeAttr(img.url || '')}" placeholder="https://example.com/image.png">
+      <label>media_type</label>
+      <select data-image-idx="${i}" data-image-k="media_type">
+        <option value="image/png" ${img.media_type === 'image/png' ? 'selected' : ''}>image/png</option>
+        <option value="image/jpeg" ${img.media_type === 'image/jpeg' ? 'selected' : ''}>image/jpeg</option>
+        <option value="image/gif" ${img.media_type === 'image/gif' ? 'selected' : ''}>image/gif</option>
+        <option value="image/webp" ${img.media_type === 'image/webp' ? 'selected' : ''}>image/webp</option>
+      </select>
+      <label class="full">base64（直接指定・長大なためオプション）</label>
+      <textarea class="full" rows="2" data-image-idx="${i}" data-image-k="base64" placeholder="iVBORw0KGgoAAAANSUhEUg...">${escapeHtml(img.base64 || '')}</textarea>
+      <button type="button" class="del full" data-act="delImage" data-image-idx="${i}">削除</button>
+    </fieldset>
+  `;
 }
 
 // テンプレート行の構築
@@ -247,7 +285,7 @@ function buildConnectionRow(c, i) {
 // v2設定の保存
 function saveV2Settings() {
   const s = state;
-  
+
   // MABEL メタデータ
   if (!s.mabel) s.mabel = {};
   s.mabel.version = el('[data-v2="mabel.version"]', v2SettingsBody)?.value || '2.0';
@@ -266,7 +304,7 @@ function saveV2Settings() {
   if (interpreter || venv || reqFile || reqText || allowNet || envText) {
     if (!s.runtime) s.runtime = {};
     if (!s.runtime.python) s.runtime.python = {};
-    
+
     if (interpreter) s.runtime.python.interpreter = interpreter;
     if (venv) s.runtime.python.venv = venv;
     if (reqFile) s.runtime.python.requirements_file = reqFile;
@@ -297,21 +335,21 @@ function saveV2Settings() {
 
   if (loopsMax || loopsExceed || recMax || recExceed || wallTime || aiMaxCalls || aiMaxTokens) {
     if (!s.budgets) s.budgets = {};
-    
+
     if (loopsMax || loopsExceed) {
       if (!s.budgets.loops) s.budgets.loops = {};
       if (loopsMax) s.budgets.loops.max_iters = Number(loopsMax);
       if (loopsExceed) s.budgets.loops.on_exceed = loopsExceed;
     }
-    
+
     if (recMax || recExceed) {
       if (!s.budgets.recursion) s.budgets.recursion = {};
       if (recMax) s.budgets.recursion.max_depth = Number(recMax);
       if (recExceed) s.budgets.recursion.on_exceed = recExceed;
     }
-    
+
     if (wallTime) s.budgets.wall_time_ms = Number(wallTime);
-    
+
     if (aiMaxCalls || aiMaxTokens) {
       if (!s.budgets.ai) s.budgets.ai = {};
       if (aiMaxCalls) s.budgets.ai.max_calls = Number(aiMaxCalls);
@@ -322,12 +360,30 @@ function saveV2Settings() {
   // Globals
   const constText = el('[data-v2="globals.const"]', v2SettingsBody)?.value.trim();
   const varsText = el('[data-v2="globals.vars"]', v2SettingsBody)?.value.trim();
-  
+
   if (constText || varsText) {
     if (!s.globals) s.globals = {};
     if (constText) s.globals.const = parseGlobalsFromTextarea(constText);
     if (varsText) s.globals.vars = parseGlobalsFromTextarea(varsText);
   }
+
+  // Images (v2.1)
+  const images = [];
+  els('[data-image-idx]', v2SettingsBody).forEach(inp => {
+    const idx = parseInt(inp.dataset.imageIdx, 10);
+    const k = inp.dataset.imageK;
+    if (!images[idx]) images[idx] = {};
+    images[idx][k] = inp.value;
+  });
+  s.images = images.filter(img => img.name).map(img => {
+    // 空のフィールドは削除
+    const cleaned = { name: img.name };
+    if (img.path && img.path.trim()) cleaned.path = img.path.trim();
+    if (img.url && img.url.trim()) cleaned.url = img.url.trim();
+    if (img.base64 && img.base64.trim()) cleaned.base64 = img.base64.trim();
+    if (img.media_type) cleaned.media_type = img.media_type;
+    return cleaned;
+  });
 
   // Templates
   const templates = [];
@@ -352,7 +408,7 @@ function saveV2Settings() {
   // Functions
   const logicFuncText = el('[data-v2="functions.logic"]', v2SettingsBody)?.value.trim();
   const pyFuncText = el('[data-v2="functions.python"]', v2SettingsBody)?.value.trim();
-  
+
   if (logicFuncText || pyFuncText) {
     if (!s.functions) s.functions = {};
     if (logicFuncText) {
@@ -386,11 +442,23 @@ function saveV2Settings() {
 
 // イベントハンドラ
 v2SettingsBody.addEventListener('click', (e) => {
+  // Image追加 (v2.1)
+  if (e.target.id === 'btnAddImage') {
+    const container = el('#imagesContainer', v2SettingsBody);
+    const existingCount = els('[data-image-idx]', container).length / 5; // name + path + url + media_type + base64 = 5要素
+    container.insertAdjacentHTML('beforeend', buildImageRow({ name: '', path: '', url: '', media_type: 'image/png', base64: '' }, existingCount));
+  }
+
+  // Image削除
+  if (e.target.dataset.act === 'delImage') {
+    e.target.closest('fieldset').remove();
+  }
+
   // Template追加
   if (e.target.id === 'btnAddTemplate') {
     const container = el('#templatesContainer', v2SettingsBody);
     const idx = els('[data-template-idx]', container).length / 2; // name + text = 2要素
-    container.insertAdjacentHTML('beforeend', buildTemplateRow({name: '', text: ''}, idx));
+    container.insertAdjacentHTML('beforeend', buildTemplateRow({ name: '', text: '' }, idx));
   }
 
   // Template削除
@@ -402,7 +470,7 @@ v2SettingsBody.addEventListener('click', (e) => {
   if (e.target.id === 'btnAddFile') {
     const container = el('#filesContainer', v2SettingsBody);
     const idx = els('[data-file-idx]', container).length / 3; // name + mime + content = 3要素
-    container.insertAdjacentHTML('beforeend', buildFileRow({name: '', mime: 'text/plain', content: ''}, idx));
+    container.insertAdjacentHTML('beforeend', buildFileRow({ name: '', mime: 'text/plain', content: '' }, idx));
   }
 
   // File削除
@@ -414,7 +482,7 @@ v2SettingsBody.addEventListener('click', (e) => {
   if (e.target.id === 'btnAddConnection') {
     const container = el('#connectionsContainer', v2SettingsBody);
     const idx = els('[data-conn-idx]', container).length / 4; // from + output + to + input = 4要素
-    container.insertAdjacentHTML('beforeend', buildConnectionRow({from: '', output: '', to: '', input: ''}, idx));
+    container.insertAdjacentHTML('beforeend', buildConnectionRow({ from: '', output: '', to: '', input: '' }, idx));
   }
 
   // Connection削除

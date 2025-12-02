@@ -1,21 +1,21 @@
 // =========================
 /* MABEL Studio Frontend (yaml: YAML export/import utilities)
  * - 本ファイル: YAMLの生成/ダウンロード、YAMLインポート（/api/import 連携）
- * - MABEL v2対応
+ * - MABEL v2.1対応（画像入力機能追加）
  */
 // =========================
 
 // -------------------------
-// YAML Export (MABEL v2)
+// YAML Export (MABEL v2.1)
 // -------------------------
 function toYAML(state) {
   const lines = [];
   const push = (s = '') => lines.push(s);
 
   try {
-    // MABEL v2ヘッダー
+    // MABEL v2.1ヘッダー
     push('mabel:');
-    push('  version: "2.0"');
+    push('  version: "2.1"');
     if (state.mabel?.id) push(`  id: ${yamlStr(state.mabel.id)}`);
     if (state.mabel?.name) push(`  name: ${yamlStr(state.mabel.name)}`);
     if (state.mabel?.description) push(`  description: ${yamlStr(state.mabel.description)}`);
@@ -106,6 +106,29 @@ function toYAML(state) {
         if (fn.code) push(`      code: ${yamlStr(fn.code)}`);
       });
     }
+    push('');
+  }
+
+  // Images (v2.1: 静的画像定義)
+  if (state.images && Array.isArray(state.images) && state.images.length > 0) {
+    push('images:');
+    state.images.forEach((img, idx) => {
+      try {
+        push(`  - name: ${yamlStr(img.name)}`);
+        if (img.path) push(`    path: ${yamlStr(img.path)}`);
+        if (img.url) push(`    url: ${yamlStr(img.url)}`);
+        if (img.base64) {
+          // base64は長いので折り返し
+          push(`    base64: ${yamlStr(img.base64)}`);
+        }
+        if (img.media_type && img.media_type !== 'image/png') {
+          push(`    media_type: ${yamlStr(img.media_type)}`);
+        }
+      } catch (err) {
+        console.error(`Error processing image ${idx}:`, err, img);
+        push(`    # ERROR: Failed to process image ${idx}`);
+      }
+    });
     push('');
   }
 
@@ -467,12 +490,13 @@ async function importYamlText(text) {
     }
     const st = (data && typeof data === 'object' && 'state' in data) ? data.state : data;
 
-    // v2トップレベル要素の反映
+    // v2.1トップレベル要素の反映
     if (st.mabel) state.mabel = st.mabel;
     if (st.runtime) state.runtime = st.runtime;
     if (st.globals) state.globals = st.globals;
     if (st.budgets) state.budgets = st.budgets;
     if (st.functions) state.functions = st.functions;
+    if (st.images) state.images = st.images;  // v2.1: 静的画像定義
     if (st.templates) state.templates = st.templates;
     if (st.files) state.files = st.files;
 

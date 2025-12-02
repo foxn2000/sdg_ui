@@ -32,13 +32,14 @@
 const el = (sel, root = document) => root.querySelector(sel);
 const els = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-// Global state (MABEL v2)
+// Global state (MABEL v2.1)
 const state = {
-  mabel: { version: "2.0" },
+  mabel: { version: "2.1" },
   runtime: {},
   globals: {},
   budgets: {},
   functions: {},
+  images: [],  // v2.1: 静的画像定義
   models: [],
   templates: [],
   files: [],
@@ -141,29 +142,29 @@ function syncSvgToCanvas() {
 // -------------------------
 // Utilities
 // -------------------------
-function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-function escapeHtml(s){ return String(s).replace(/[&<>'"]/g, c => ({'&':'&','<':'<','>':'>',"'":'&#39;','"':'"'}[c])); }
-function escapeAttr(s){ return escapeHtml(s).replace(/\n/g,'&#10;'); }
-function safeParseJson(s, fallback){
-  try{ return JSON.parse(s); } catch{ return fallback; }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function escapeHtml(s) { return String(s).replace(/[&<>'"]/g, c => ({ '&': '&', '<': '<', '>': '>', "'": '&#39;', '"': '"' }[c])); }
+function escapeAttr(s) { return escapeHtml(s).replace(/\n/g, '&#10;'); }
+function safeParseJson(s, fallback) {
+  try { return JSON.parse(s); } catch { return fallback; }
 }
-function toMaybeNumber(v){
+function toMaybeNumber(v) {
   if (v === '' || v === null || v === undefined) return v;
   const n = Number(v);
   return Number.isFinite(n) ? n : v;
 }
-function deepClone(obj, mutateFn){
+function deepClone(obj, mutateFn) {
   const x = JSON.parse(JSON.stringify(obj));
   if (mutateFn) mutateFn(x);
   return x;
 }
-function isEditableTarget(t){
+function isEditableTarget(t) {
   if (!t) return false;
   const tag = (t.tagName || '').toLowerCase();
   return tag === 'input' || tag === 'textarea' || t.isContentEditable;
 }
 
-function snap(p){
+function snap(p) {
   return {
     x: Math.round(p.x / GRID) * GRID,
     y: Math.round(p.y / GRID) * GRID

@@ -2,22 +2,38 @@ from __future__ import annotations
 from typing import Any, Dict, List
 import yaml
 
+
 def yaml_to_state(text: str) -> Dict[str, Any]:
-    """MABEL v2対応: YAMLからGraphStateへの変換"""
+    """MABEL v2.1対応: YAMLからGraphStateへの変換"""
     data = yaml.safe_load(text) or {}
-    
-    # MABEL v2トップレベル要素の取得
-    mabel = data.get("mabel") or {"version": "2.0"}
+
+    # MABEL v2.1トップレベル要素の取得
+    mabel = data.get("mabel") or {"version": "2.1"}
     runtime = data.get("runtime") or {}
     globals_data = data.get("globals") or {}
     budgets = data.get("budgets") or {}
     functions = data.get("functions") or {}
+    images = data.get("images") or []  # v2.1: 静的画像定義
     models = data.get("models") or []
     templates = data.get("templates") or []
     files = data.get("files") or []
     blocks = data.get("blocks") or []
     connections = data.get("connections") or []
-    
+
+    # 画像の正規化（nameフィールドを必須化）
+    if isinstance(images, list):
+        normalized_images: List[Dict[str, Any]] = []
+        for img in images:
+            if isinstance(img, dict):
+                out = dict(img)
+                img_name = out.get("name")
+                if isinstance(img_name, str) and img_name.strip():
+                    # media_typeのデフォルト値を設定
+                    if "media_type" not in out:
+                        out["media_type"] = "image/png"
+                    normalized_images.append(out)
+        images = normalized_images
+
     # ブロックのoutputsを正規化（文字列配列→ディクショナリ配列）
     if isinstance(blocks, list):
         for block in blocks:
@@ -68,6 +84,7 @@ def yaml_to_state(text: str) -> Dict[str, Any]:
         "globals": globals_data,
         "budgets": budgets,
         "functions": functions,
+        "images": images if isinstance(images, list) else [],  # v2.1
         "models": models if isinstance(models, list) else [],
         "templates": templates if isinstance(templates, list) else [],
         "files": files if isinstance(files, list) else [],
@@ -75,23 +92,25 @@ def yaml_to_state(text: str) -> Dict[str, Any]:
         "connections": connections if isinstance(connections, list) else [],
     }
 
+
 def state_to_yaml(state: Dict[str, Any]) -> str:
-    """MABEL v2対応: GraphStateからYAMLへの変換"""
-    # MABEL v2トップレベル要素の取得
-    mabel = state.get("mabel") or {"version": "2.0"}
+    """MABEL v2.1対応: GraphStateからYAMLへの変換"""
+    # MABEL v2.1トップレベル要素の取得
+    mabel = state.get("mabel") or {"version": "2.1"}
     runtime = state.get("runtime")
     globals_data = state.get("globals")
     budgets = state.get("budgets")
     functions = state.get("functions")
+    images = state.get("images") or []  # v2.1: 静的画像定義
     models = state.get("models") or []
     templates = state.get("templates")
     files = state.get("files")
     blocks = state.get("blocks") or []
     connections = state.get("connections") or []
-    
+
     # YAML構造を構築
     doc: Dict[str, Any] = {"mabel": mabel}
-    
+
     # 存在する場合のみ追加
     if runtime:
         doc["runtime"] = runtime
@@ -101,11 +120,15 @@ def state_to_yaml(state: Dict[str, Any]) -> str:
         doc["budgets"] = budgets
     if functions:
         doc["functions"] = functions
-    
+
+    # v2.1: 画像定義（存在する場合のみ）
+    if images:
+        doc["images"] = images
+
     # モデルとブロックは必須
     doc["models"] = models
     doc["blocks"] = blocks
-    
+
     # その他のオプション要素
     if templates:
         doc["templates"] = templates
@@ -113,5 +136,5 @@ def state_to_yaml(state: Dict[str, Any]) -> str:
         doc["files"] = files
     if connections:
         doc["connections"] = connections
-    
+
     return yaml.safe_dump(doc, sort_keys=False, allow_unicode=True)

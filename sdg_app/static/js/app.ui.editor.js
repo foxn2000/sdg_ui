@@ -286,46 +286,87 @@ function readAiFormInto(b) {
 }
 
 function buildLogicForm(b) {
+  const currentOp = b.op || 'if';
   const wrap = document.createElement('div');
   wrap.className = 'form-grid';
+
+  // opタイプごとに表示するセクションを決定
+  const opSections = {
+    if: ['if_section'],
+    and: ['operands_section'],
+    or: ['operands_section'],
+    not: ['operands_section'],
+    for: ['for_section'],
+    set: ['set_section'],
+    let: ['let_section'],
+    reduce: ['reduce_section'],
+    while: ['while_section'],
+    call: ['call_section'],
+    emit: ['emit_section'],
+    recurse: ['recurse_section']
+  };
+
+  // outputsのfrom選択肢もopタイプごとに最適化
+  const opOutputFromOptions = {
+    if: ['boolean', 'value'],
+    and: ['boolean'],
+    or: ['boolean'],
+    not: ['boolean'],
+    for: ['count', 'list', 'join', 'any', 'all', 'first', 'last'],
+    set: ['value'],
+    let: ['value'],
+    reduce: ['value'],
+    while: ['value', 'count'],
+    call: ['value'],
+    emit: [],
+    recurse: ['value']
+  };
+
   wrap.innerHTML = `
     <label>name（任意）</label>
     <input data-k="name" value="${escapeAttr(b.name || '')}">
 
     <label>op</label>
-    <select data-k="op">
-      <option value="if" ${b.op === 'if' ? 'selected' : ''}>if</option>
-      <option value="and" ${b.op === 'and' ? 'selected' : ''}>and</option>
-      <option value="or" ${b.op === 'or' ? 'selected' : ''}>or</option>
-      <option value="not" ${b.op === 'not' ? 'selected' : ''}>not</option>
-      <option value="for" ${b.op === 'for' ? 'selected' : ''}>for</option>
-      <option value="while" ${b.op === 'while' ? 'selected' : ''}>while (v2)</option>
-      <option value="set" ${b.op === 'set' ? 'selected' : ''}>set (v2)</option>
-      <option value="let" ${b.op === 'let' ? 'selected' : ''}>let (v2)</option>
-      <option value="reduce" ${b.op === 'reduce' ? 'selected' : ''}>reduce (v2)</option>
-      <option value="call" ${b.op === 'call' ? 'selected' : ''}>call (v2)</option>
-      <option value="emit" ${b.op === 'emit' ? 'selected' : ''}>emit (v2)</option>
-      <option value="recurse" ${b.op === 'recurse' ? 'selected' : ''}>recurse (v2)</option>
+    <select data-k="op" id="logicOpSelect">
+      <option value="if" ${currentOp === 'if' ? 'selected' : ''}>if</option>
+      <option value="and" ${currentOp === 'and' ? 'selected' : ''}>and</option>
+      <option value="or" ${currentOp === 'or' ? 'selected' : ''}>or</option>
+      <option value="not" ${currentOp === 'not' ? 'selected' : ''}>not</option>
+      <option value="for" ${currentOp === 'for' ? 'selected' : ''}>for</option>
+      <option value="while" ${currentOp === 'while' ? 'selected' : ''}>while (v2)</option>
+      <option value="set" ${currentOp === 'set' ? 'selected' : ''}>set (v2)</option>
+      <option value="let" ${currentOp === 'let' ? 'selected' : ''}>let (v2)</option>
+      <option value="reduce" ${currentOp === 'reduce' ? 'selected' : ''}>reduce (v2)</option>
+      <option value="call" ${currentOp === 'call' ? 'selected' : ''}>call (v2)</option>
+      <option value="emit" ${currentOp === 'emit' ? 'selected' : ''}>emit (v2)</option>
+      <option value="recurse" ${currentOp === 'recurse' ? 'selected' : ''}>recurse (v2)</option>
     </select>
 
-    <details class="full"><summary>条件・分岐（op=if時）</summary>
-      <div class="form-grid">
-        <label>cond（JSON）</label>
+    <div id="logicOpSections" class="full">
+      <!-- if セクション -->
+      <div class="form-grid logic-section" data-section="if_section" style="display: ${currentOp === 'if' ? 'grid' : 'none'};">
+        <h4 class="full">条件・分岐設定</h4>
+        <label class="full">cond（JSON: 条件式）</label>
         <input class="full" data-k="cond" value='${escapeAttr(JSON.stringify(b.cond || {}))}'>
-        <label>then</label><input data-k="then" value="${escapeAttr(b.then || '')}">
-        <label>else</label><input data-k="else" value="${escapeAttr(b.else || '')}">
+        <label>then（条件成立時）</label>
+        <input data-k="then" value="${escapeAttr(b.then || '')}" placeholder="run / skip / exec番号">
+        <label>else（条件不成立時）</label>
+        <input data-k="else" value="${escapeAttr(b.else || '')}" placeholder="run / skip / exec番号">
       </div>
-    </details>
 
-    <details class="full"><summary>operands（op=and/or/not時, JSON配列）</summary>
-      <input class="full" data-k="operands" value='${b.operands ? escapeAttr(JSON.stringify(b.operands)) : ''}'>
-    </details>
+      <!-- operands セクション (and/or/not) -->
+      <div class="form-grid logic-section" data-section="operands_section" style="display: ${['and', 'or', 'not'].includes(currentOp) ? 'grid' : 'none'};">
+        <h4 class="full">${currentOp === 'not' ? '否定対象' : '論理演算対象'}</h4>
+        <label class="full">operands（JSON配列: ${currentOp === 'not' ? '1つの条件' : '複数の条件'}）</label>
+        <textarea class="full" rows="4" data-k="operands" placeholder='[{"equals": ["{Var}", "value"]}${currentOp !== 'not' ? ', {"gt": ["{Count}", 0]}' : ''}]'>${b.operands ? escapeHtml(JSON.stringify(b.operands, null, 2)) : ''}</textarea>
+      </div>
 
-    <details class="full"><summary>for 仕様（op=for時）</summary>
-      <div class="form-grid">
-        <label>list</label>
-        <input class="full" data-k="list" value="${escapeAttr(b.list || '')}">
-        <label>parse</label>
+      <!-- for セクション -->
+      <div class="form-grid logic-section" data-section="for_section" style="display: ${currentOp === 'for' ? 'grid' : 'none'};">
+        <h4 class="full">ループ設定</h4>
+        <label>list（リストソース）</label>
+        <input class="full" data-k="list" value="${escapeAttr(b.list || '')}" placeholder="{Items}">
+        <label>parse（パース方式）</label>
         <select data-k="parse">
           <option value="">(default: lines)</option>
           <option value="lines" ${b.parse === 'lines' ? 'selected' : ''}>lines</option>
@@ -334,113 +375,113 @@ function buildLogicForm(b) {
           <option value="regex" ${b.parse === 'regex' ? 'selected' : ''}>regex</option>
         </select>
         <label>regex_pattern（parse=regex時）</label>
-        <input data-k="regex_pattern" class="full" value="${escapeAttr(b.regex_pattern || '')}">
-        <label>var（既定: item）</label>
-        <input data-k="var" value="${escapeAttr(b.var || '')}">
-        <label>drop_empty</label>
+        <input data-k="regex_pattern" class="full" value="${escapeAttr(b.regex_pattern || '')}" placeholder="正規表現パターン">
+        <label>var（ループ変数名）</label>
+        <input data-k="var" value="${escapeAttr(b.var || '')}" placeholder="item（既定）">
+        <label>drop_empty（空要素を除外）</label>
         <select data-k="drop_empty">
           <option value="">(default: true)</option>
           <option value="true" ${b.drop_empty === true ? 'selected' : ''}>true</option>
           <option value="false" ${b.drop_empty === false ? 'selected' : ''}>false</option>
         </select>
-        <label>where（条件, JSON）</label>
-        <input data-k="where" class="full" value='${b.where ? escapeAttr(JSON.stringify(b.where)) : ''}'>
-        <label>map（テンプレート）</label>
-        <input data-k="map" class="full" value="${escapeAttr(b.map || '')}">
+        <label class="full">where（フィルタ条件, JSON）</label>
+        <input data-k="where" class="full" value='${b.where ? escapeAttr(JSON.stringify(b.where)) : ''}' placeholder='{"gt": ["{item.length}", 0]}'>
+        <label class="full">map（変換テンプレート）</label>
+        <input data-k="map" class="full" value="${escapeAttr(b.map || '')}" placeholder="{item}を加工">
       </div>
-    </details>
 
-    <details class="full"><summary>set 仕様（op=set時, v2）</summary>
-      <div class="form-grid">
+      <!-- set セクション -->
+      <div class="form-grid logic-section" data-section="set_section" style="display: ${currentOp === 'set' ? 'grid' : 'none'};">
+        <h4 class="full">変数設定</h4>
         <label>var（変数名）</label>
-        <input class="full" data-k="set_var" value="${escapeAttr(b.var || '')}">
-        <label class="full">value（JSON/MEX式）</label>
-        <textarea class="full" rows="3" data-k="set_value">${escapeHtml(typeof b.value === 'object' ? JSON.stringify(b.value, null, 2) : (b.value || ''))}</textarea>
+        <input class="full" data-k="set_var" value="${escapeAttr(b.var || '')}" placeholder="MyVariable">
+        <label class="full">value（設定する値, JSON/MEX式）</label>
+        <textarea class="full" rows="3" data-k="set_value" placeholder="{SomeValue} または JSON">${escapeHtml(typeof b.value === 'object' ? JSON.stringify(b.value, null, 2) : (b.value || ''))}</textarea>
       </div>
-    </details>
 
-    <details class="full"><summary>let 仕様（op=let時, v2）</summary>
-      <div class="form-grid">
+      <!-- let セクション -->
+      <div class="form-grid logic-section" data-section="let_section" style="display: ${currentOp === 'let' ? 'grid' : 'none'};">
+        <h4 class="full">ローカルスコープ設定</h4>
         <label class="full">bindings（JSON: ローカル変数束縛）</label>
-        <textarea class="full" rows="3" data-k="let_bindings">${escapeHtml(b.bindings ? JSON.stringify(b.bindings, null, 2) : '{}')}</textarea>
-        <label class="full">body（JSON配列: 実行ステップ）</label>
-        <textarea class="full" rows="5" data-k="let_body">${escapeHtml(b.body ? JSON.stringify(b.body, null, 2) : '[]')}</textarea>
+        <textarea class="full" rows="3" data-k="let_bindings" placeholder='{"x": "{Input}", "y": 10}'>${escapeHtml(b.bindings ? JSON.stringify(b.bindings, null, 2) : '')}</textarea>
+        <label class="full">body（JSON: 実行式）</label>
+        <textarea class="full" rows="5" data-k="let_body" placeholder='{"add": ["{x}", "{y}"]}'>${escapeHtml(b.body ? JSON.stringify(b.body, null, 2) : '')}</textarea>
       </div>
-    </details>
 
-    <details class="full"><summary>reduce 仕様（op=reduce時, v2）</summary>
-      <div class="form-grid">
+      <!-- reduce セクション -->
+      <div class="form-grid logic-section" data-section="reduce_section" style="display: ${currentOp === 'reduce' ? 'grid' : 'none'};">
+        <h4 class="full">累積処理設定</h4>
         <label>list（リストソース）</label>
-        <input class="full" data-k="reduce_list" value="${escapeAttr(b.list || '')}">
-        <label class="full">value（初期値, JSON/MEX）</label>
-        <input class="full" data-k="reduce_value" value="${escapeAttr(typeof b.value === 'object' ? JSON.stringify(b.value) : (b.value ?? ''))}">
+        <input class="full" data-k="reduce_list" value="${escapeAttr(b.list || '')}" placeholder="{Items}">
+        <label>value（初期値）</label>
+        <input class="full" data-k="reduce_value" value="${escapeAttr(typeof b.value === 'object' ? JSON.stringify(b.value) : (b.value ?? ''))}" placeholder="0 または JSON">
         <label>var（アイテム変数名）</label>
-        <input data-k="reduce_var" value="${escapeAttr(b.var || 'item')}">
+        <input data-k="reduce_var" value="${escapeAttr(b.var || '')}" placeholder="item（既定）">
         <label>accumulator（累積変数名）</label>
-        <input data-k="reduce_accumulator" value="${escapeAttr(b.accumulator || 'accumulator')}">
-        <label class="full">body（JSON配列: 累積ロジック）</label>
-        <textarea class="full" rows="5" data-k="reduce_body">${escapeHtml(b.body ? JSON.stringify(b.body, null, 2) : '[]')}</textarea>
+        <input data-k="reduce_accumulator" value="${escapeAttr(b.accumulator || '')}" placeholder="acc（既定）">
+        <label class="full">body（JSON: 累積ロジック）</label>
+        <textarea class="full" rows="5" data-k="reduce_body" placeholder='{"add": ["{acc}", 1]}'>${escapeHtml(b.body ? JSON.stringify(b.body, null, 2) : '')}</textarea>
       </div>
-    </details>
 
-    <details class="full"><summary>while 仕様（op=while時, v2）</summary>
-      <div class="form-grid">
-        <label class="full">init（JSON配列: 初期化ステップ）</label>
-        <textarea class="full" rows="3" data-k="while_init">${escapeHtml(b.init ? JSON.stringify(b.init, null, 2) : '[]')}</textarea>
-        <label class="full">cond（JSON/MEX: ループ継続条件）</label>
-        <textarea class="full" rows="2" data-k="while_cond">${escapeHtml(b.cond ? JSON.stringify(b.cond, null, 2) : '{}')}</textarea>
-        <label class="full">step（JSON配列: ループボディ）</label>
-        <textarea class="full" rows="5" data-k="while_step">${escapeHtml(b.step ? JSON.stringify(b.step, null, 2) : '[]')}</textarea>
+      <!-- while セクション -->
+      <div class="form-grid logic-section" data-section="while_section" style="display: ${currentOp === 'while' ? 'grid' : 'none'};">
+        <h4 class="full">Whileループ設定</h4>
+        <label class="full">init（JSON: 初期化）</label>
+        <textarea class="full" rows="3" data-k="while_init" placeholder='{"counter": 0}'>${escapeHtml(b.init ? JSON.stringify(b.init, null, 2) : '')}</textarea>
+        <label class="full">cond（JSON: ループ継続条件）</label>
+        <textarea class="full" rows="2" data-k="while_cond" placeholder='{"lt": ["{counter}", 10]}'>${escapeHtml(b.cond ? JSON.stringify(b.cond, null, 2) : '')}</textarea>
+        <label class="full">step（JSON: ループ本体）</label>
+        <textarea class="full" rows="5" data-k="while_step" placeholder='{"set": {"counter": {"add": ["{counter}", 1]}}}'>${escapeHtml(b.step ? JSON.stringify(b.step, null, 2) : '')}</textarea>
         <label class="full">budget（JSON: ループ予算制限）</label>
-        <input class="full" data-k="while_budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
+        <input class="full" data-k="while_budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}' placeholder='{"max_iters": 100}'>
       </div>
-    </details>
 
-    <details class="full"><summary>call 仕様（op=call時, v2）</summary>
-      <div class="form-grid">
+      <!-- call セクション -->
+      <div class="form-grid logic-section" data-section="call_section" style="display: ${currentOp === 'call' ? 'grid' : 'none'};">
+        <h4 class="full">関数呼び出し設定</h4>
         <label>function（関数名）</label>
-        <input class="full" data-k="call_function" value="${escapeAttr(b.function || b.name || '')}">
+        <input class="full" data-k="call_function" value="${escapeAttr(typeof b.function === 'string' ? b.function : '')}" placeholder="myFunction">
         <label class="full">with（JSON: 引数マッピング）</label>
-        <textarea class="full" rows="3" data-k="call_with">${escapeHtml(b.with ? JSON.stringify(b.with, null, 2) : '{}')}</textarea>
-        <label class="full">returns（配列: 戻り値変数名）</label>
-        <input class="full" data-k="call_returns" value="${escapeAttr((b.returns || []).join(', '))}">
+        <textarea class="full" rows="3" data-k="call_with" placeholder='{"arg1": "{Input1}"}'>${escapeHtml(b.with ? JSON.stringify(b.with, null, 2) : '')}</textarea>
+        <label class="full">returns（戻り値変数名, カンマ区切り）</label>
+        <input class="full" data-k="call_returns" value="${escapeAttr((b.returns || []).join(', '))}" placeholder="result, status">
       </div>
-    </details>
 
-    <details class="full"><summary>emit 仕様（op=emit時, v2）</summary>
-      <div class="form-grid">
-        <label class="full">value（JSON/MEX: 発行する値）</label>
-        <textarea class="full" rows="3" data-k="emit_value">${escapeHtml(typeof b.value === 'object' ? JSON.stringify(b.value, null, 2) : (b.value || ''))}</textarea>
+      <!-- emit セクション -->
+      <div class="form-grid logic-section" data-section="emit_section" style="display: ${currentOp === 'emit' ? 'grid' : 'none'};">
+        <h4 class="full">値発行設定</h4>
+        <label class="full">value（発行する値, JSON/MEX式）</label>
+        <textarea class="full" rows="3" data-k="emit_value" placeholder="{OutputValue} または JSON">${escapeHtml(typeof b.value === 'object' ? JSON.stringify(b.value, null, 2) : (b.value || ''))}</textarea>
+        <p class="small-note full">emitブロックは値を発行するため、通常outputsは不要です。</p>
       </div>
-    </details>
 
-    <details class="full"><summary>recurse 仕様（op=recurse時, v2）</summary>
-      <div class="form-grid">
-        <label>name（再帰関数名）</label>
-        <input class="full" data-k="recurse_name" value="${escapeAttr(b.name || '')}">
-        <label class="full">function（JSON: {args, returns, base_case, body}）</label>
-        <textarea class="full" rows="10" data-k="recurse_function">${escapeHtml(b.function ? JSON.stringify(b.function, null, 2) : '{}')}</textarea>
+      <!-- recurse セクション -->
+      <div class="form-grid logic-section" data-section="recurse_section" style="display: ${currentOp === 'recurse' ? 'grid' : 'none'};">
+        <h4 class="full">再帰処理設定</h4>
+        <label class="full">function（JSON: 再帰関数定義 {args, returns, base_case, body}）</label>
+        <textarea class="full" rows="10" data-k="recurse_function" placeholder='{"args": ["n"], "returns": ["result"], "base_case": {"if": {"lte": ["{n}", 1]}, "then": 1}, "body": {...}}'>${escapeHtml(typeof b.function === 'object' ? JSON.stringify(b.function, null, 2) : '')}</textarea>
         <label class="full">with（JSON: 初期呼び出し引数）</label>
-        <textarea class="full" rows="3" data-k="recurse_with">${escapeHtml(b.with ? JSON.stringify(b.with, null, 2) : '{}')}</textarea>
+        <textarea class="full" rows="3" data-k="recurse_with" placeholder='{"n": 10}'>${escapeHtml(b.with ? JSON.stringify(b.with, null, 2) : '')}</textarea>
         <label class="full">budget（JSON: 再帰深度制限）</label>
-        <input class="full" data-k="recurse_budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
+        <input class="full" data-k="recurse_budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}' placeholder='{"max_depth": 10}'>
       </div>
-    </details>
+    </div>
 
-    <details class="full" open><summary>outputs（任意）</summary>
+    <details class="full" id="logicOutputsSection" open style="display: ${currentOp === 'emit' ? 'none' : 'block'};">
+      <summary>outputs（任意）</summary>
       <fieldset class="inline-list" id="logicOutputs">
         <div class="hdr"><div>name</div><div>from</div><div>source</div><div>join_with</div><div>del</div></div>
-        <div class="small-note">name / from(boolean|value|join|count|any|all|first|last|list) / source(raw|filtered|mapped) / join_with / test(JSON) / limit / offset</div>
-        ${(b.outputs || []).map(o => logicOutputRow(o)).join('')}
+        <div class="small-note" id="logicOutputsHint">name / from / source(raw|filtered|mapped) / join_with</div>
+        ${(b.outputs || []).map(o => logicOutputRow(o, currentOp)).join('')}
         <button type="button" class="accent" id="btnAddLogicOut">+ add output</button>
       </fieldset>
     </details>
 
     <details class="full"><summary>run_if / on_error（任意）</summary>
       <div class="form-grid">
-        <label>run_if（JSON）</label>
-        <input class="full" data-k="run_if" value='${b.run_if ? escapeAttr(JSON.stringify(b.run_if)) : ''}'>
-        <label>on_error</label>
+        <label class="full">run_if（JSON: 実行条件）</label>
+        <input class="full" data-k="run_if" value='${b.run_if ? escapeAttr(JSON.stringify(b.run_if)) : ''}' placeholder='{"equals": ["{Flag}", "on"]}'>
+        <label>on_error（エラー時動作）</label>
         <select data-k="on_error">
           <option value="">(default: fail)</option>
           <option value="fail" ${b.on_error === 'fail' ? 'selected' : ''}>fail</option>
@@ -450,10 +491,37 @@ function buildLogicForm(b) {
     </details>
   `;
 
+  // opタイプ変更時のセクション切り替え
+  const opSelect = wrap.querySelector('#logicOpSelect');
+  opSelect.addEventListener('change', (e) => {
+    const newOp = e.target.value;
+    const sections = wrap.querySelectorAll('.logic-section');
+    const sectionsToShow = opSections[newOp] || [];
+
+    sections.forEach(sec => {
+      const sectionName = sec.dataset.section;
+      sec.style.display = sectionsToShow.includes(sectionName) ? 'grid' : 'none';
+    });
+
+    // emitの場合はoutputsセクションを非表示
+    const outputsSection = wrap.querySelector('#logicOutputsSection');
+    if (outputsSection) {
+      outputsSection.style.display = newOp === 'emit' ? 'none' : 'block';
+    }
+
+    // operandsセクションのタイトルを更新
+    const operandsSection = wrap.querySelector('[data-section="operands_section"] h4');
+    if (operandsSection) {
+      operandsSection.textContent = newOp === 'not' ? '否定対象' : '論理演算対象';
+    }
+  });
+
   wrap.addEventListener('click', (e) => {
     if (e.target.id === 'btnAddLogicOut') {
       const fs = el('#logicOutputs', wrap);
-      fs.insertAdjacentHTML('beforeend', logicOutputRow({ name: 'Out_' + Math.random().toString(36).slice(2, 6), from: 'boolean' }));
+      const currentOp = wrap.querySelector('#logicOpSelect').value;
+      const defaultFrom = (opOutputFromOptions[currentOp] || ['boolean'])[0] || 'boolean';
+      fs.insertAdjacentHTML('beforeend', logicOutputRow({ name: 'Out_' + Math.random().toString(36).slice(2, 6), from: defaultFrom }, currentOp));
     }
     if (e.target.dataset.act === 'delOut') {
       const row = e.target.closest('.row');
@@ -466,206 +534,315 @@ function buildLogicForm(b) {
   return wrap;
 }
 
-function logicOutputRow(o) {
-  return `
+function logicOutputRow(o, opType = 'if') {
+  // opタイプごとに利用可能なfromオプション
+  const opOutputFromOptions = {
+    if: ['boolean', 'value'],
+    and: ['boolean'],
+    or: ['boolean'],
+    not: ['boolean'],
+    for: ['count', 'list', 'join', 'any', 'all', 'first', 'last'],
+    set: ['value'],
+    let: ['value'],
+    reduce: ['value'],
+    while: ['value', 'count'],
+    call: ['value'],
+    emit: [],
+    recurse: ['value']
+  };
+
+  const availableFromOptions = opOutputFromOptions[opType] || ['boolean', 'value'];
+
+  // fromオプションの表示名
+  const fromLabels = {
+    boolean: 'boolean（真偽値）',
+    value: 'value（計算結果）',
+    join: 'join（結合文字列）',
+    count: 'count（件数）',
+    list: 'list（リスト）',
+    any: 'any（いずれか）',
+    all: 'all（すべて）',
+    first: 'first（最初の要素）',
+    last: 'last（最後の要素）'
+  };
+
+  // forループ用の追加フィールド（source, test, limit, offset）を表示するか
+  const showForFields = opType === 'for';
+  // joinオプションが選択可能な場合のみjoin_withを表示
+  const showJoinWith = availableFromOptions.includes('join') || o.from === 'join';
+
+  let html = `
     <div class="row">
       <input placeholder="name" data-o="name" value="${escapeAttr(o.name || '')}">
       <select data-o="from">
-        <option value="boolean" ${o.from === 'boolean' ? 'selected' : ''}>boolean</option>
-        <option value="value" ${o.from === 'value' ? 'selected' : ''}>value</option>
-        <option value="join" ${o.from === 'join' ? 'selected' : ''}>join</option>
-        <option value="count" ${o.from === 'count' ? 'selected' : ''}>count</option>
-        <option value="any" ${o.from === 'any' ? 'selected' : ''}>any</option>
-        <option value="all" ${o.from === 'all' ? 'selected' : ''}>all</option>
-        <option value="first" ${o.from === 'first' ? 'selected' : ''}>first</option>
-        <option value="last" ${o.from === 'last' ? 'selected' : ''}>last</option>
-        <option value="list" ${o.from === 'list' ? 'selected' : ''}>list</option>
+        ${availableFromOptions.map(opt =>
+    `<option value="${opt}" ${o.from === opt ? 'selected' : ''}>${fromLabels[opt] || opt}</option>`
+  ).join('')}
       </select>
-      <select data-o="source">
-        <option value="" ${!o.source ? 'selected' : ''}>(default)</option>
-        <option value="raw" ${o.source === 'raw' ? 'selected' : ''}>raw</option>
-        <option value="filtered" ${o.source === 'filtered' ? 'selected' : ''}>filtered</option>
-        <option value="mapped" ${o.source === 'mapped' ? 'selected' : ''}>mapped</option>
-      </select>
-      <input placeholder="join_with" data-o="join_with" value="${escapeAttr(o.join_with || '')}">
+      ${showForFields ? `
+        <select data-o="source">
+          <option value="" ${!o.source ? 'selected' : ''}>(default)</option>
+          <option value="raw" ${o.source === 'raw' ? 'selected' : ''}>raw</option>
+          <option value="filtered" ${o.source === 'filtered' ? 'selected' : ''}>filtered</option>
+          <option value="mapped" ${o.source === 'mapped' ? 'selected' : ''}>mapped</option>
+        </select>
+      ` : '<div></div>'}
+      ${showJoinWith ? `
+        <input placeholder="join_with" data-o="join_with" value="${escapeAttr(o.join_with || '')}">
+      ` : '<div></div>'}
       <button type="button" class="del" data-act="delOut" aria-label="Delete output"><span class="icon icon-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
-    </div>
+    </div>`;
+
+  // forループの場合のみ追加行を表示
+  if (showForFields) {
+    html += `
     <div class="row">
       <input placeholder='test（JSON, any/all用）' data-o="test" value='${o.test ? escapeAttr(JSON.stringify(o.test)) : ''}'>
       <input placeholder="limit" data-o="limit" value="${o.limit ?? ''}">
       <input placeholder="offset" data-o="offset" value="${o.offset ?? ''}">
       <div></div>
       <div></div>
-    </div>
-  `;
+    </div>`;
+  }
+
+  return html;
 }
 
 function readLogicFormInto(b) {
-  b.name = el('[data-k="name"]', editorBody).value.trim();
-  b.op = el('[data-k="op"]', editorBody).value;
+  b.name = el('[data-k="name"]', editorBody).value.trim() || undefined;
+  const newOp = el('[data-k="op"]', editorBody).value;
+  b.op = newOp;
 
-  // if演算子
-  const condStr = el('[data-k="cond"]', editorBody).value.trim();
-  b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
-  b.then = el('[data-k="then"]', editorBody).value;
-  b.else = el('[data-k="else"]', editorBody).value;
+  // 最初に全ての可能なプロパティをリセット（opタイプが変わった場合のクリーンアップ）
+  const allOpProps = ['cond', 'then', 'else', 'operands', 'list', 'parse', 'regex_pattern',
+    'var', 'drop_empty', 'where', 'map', 'value', 'bindings', 'body', 'accumulator',
+    'init', 'step', 'budget', 'function', 'with', 'returns'];
 
-  // and/or/not演算子  
-  const opsStr = el('[data-k="operands"]', editorBody).value.trim();
-  b.operands = opsStr ? safeParseJson(opsStr, []) : undefined;
+  // opに関係ないプロパティを削除する代わりに、選択されたopに必要なものだけを設定
 
-  // for演算子
-  const listEl = el('[data-k="list"]', editorBody);
-  if (listEl) b.list = listEl.value;
-  b.parse = el('[data-k="parse"]', editorBody)?.value || undefined;
-  b.regex_pattern = el('[data-k="regex_pattern"]', editorBody)?.value || undefined;
-  const varVal = el('[data-k="var"]', editorBody)?.value.trim() || '';
-  b.var = varVal || undefined;
-  const dropSel = el('[data-k="drop_empty"]', editorBody)?.value || '';
-  if (dropSel === '') {
-    b.drop_empty = undefined;
-  } else {
-    b.drop_empty = (dropSel === 'true');
-  }
-  const whereStr = el('[data-k="where"]', editorBody)?.value.trim() || '';
-  b.where = whereStr ? safeParseJson(whereStr, null) : undefined;
-  const mapEl = el('[data-k="map"]', editorBody);
-  if (mapEl) b.map = mapEl.value;
-
-  // set演算子 (v2)
-  const setVarEl = el('[data-k="set_var"]', editorBody);
-  if (setVarEl && setVarEl.value.trim()) {
-    b.var = setVarEl.value.trim();
-  }
-  const setValueEl = el('[data-k="set_value"]', editorBody);
-  if (setValueEl && setValueEl.value.trim()) {
-    const valueStr = setValueEl.value.trim();
-    b.value = safeParseJson(valueStr, valueStr);
-  }
-
-  // let演算子 (v2)
-  const letBindingsEl = el('[data-k="let_bindings"]', editorBody);
-  if (letBindingsEl && letBindingsEl.value.trim()) {
-    b.bindings = safeParseJson(letBindingsEl.value.trim(), {});
-  }
-  const letBodyEl = el('[data-k="let_body"]', editorBody);
-  if (letBodyEl && letBodyEl.value.trim()) {
-    b.body = safeParseJson(letBodyEl.value.trim(), []);
-  }
-
-  // reduce演算子 (v2)
-  const reduceListEl = el('[data-k="reduce_list"]', editorBody);
-  if (reduceListEl && reduceListEl.value.trim()) {
-    b.list = reduceListEl.value.trim();
-  }
-  const reduceValueEl = el('[data-k="reduce_value"]', editorBody);
-  if (reduceValueEl && reduceValueEl.value.trim()) {
-    const valueStr = reduceValueEl.value.trim();
-    b.value = safeParseJson(valueStr, valueStr);
-  }
-  const reduceVarEl = el('[data-k="reduce_var"]', editorBody);
-  if (reduceVarEl && reduceVarEl.value.trim()) {
-    b.var = reduceVarEl.value.trim();
-  }
-  const reduceAccEl = el('[data-k="reduce_accumulator"]', editorBody);
-  if (reduceAccEl && reduceAccEl.value.trim()) {
-    b.accumulator = reduceAccEl.value.trim();
-  }
-  const reduceBodyEl = el('[data-k="reduce_body"]', editorBody);
-  if (reduceBodyEl && reduceBodyEl.value.trim()) {
-    b.body = safeParseJson(reduceBodyEl.value.trim(), []);
-  }
-
-  // while演算子 (v2)
-  const whileInitEl = el('[data-k="while_init"]', editorBody);
-  if (whileInitEl && whileInitEl.value.trim()) {
-    b.init = safeParseJson(whileInitEl.value.trim(), []);
-  }
-  const whileCondEl = el('[data-k="while_cond"]', editorBody);
-  if (whileCondEl && whileCondEl.value.trim()) {
-    b.cond = safeParseJson(whileCondEl.value.trim(), {});
-  }
-  const whileStepEl = el('[data-k="while_step"]', editorBody);
-  if (whileStepEl && whileStepEl.value.trim()) {
-    b.step = safeParseJson(whileStepEl.value.trim(), []);
-  }
-  const whileBudgetEl = el('[data-k="while_budget"]', editorBody);
-  if (whileBudgetEl && whileBudgetEl.value.trim()) {
-    b.budget = safeParseJson(whileBudgetEl.value.trim(), null);
-  }
-
-  // call演算子 (v2)
-  const callFuncEl = el('[data-k="call_function"]', editorBody);
-  if (callFuncEl && callFuncEl.value.trim()) {
-    b.function = callFuncEl.value.trim();
-  }
-  const callWithEl = el('[data-k="call_with"]', editorBody);
-  if (callWithEl && callWithEl.value.trim()) {
-    b.with = safeParseJson(callWithEl.value.trim(), {});
-  }
-  const callReturnsEl = el('[data-k="call_returns"]', editorBody);
-  if (callReturnsEl && callReturnsEl.value.trim()) {
-    b.returns = callReturnsEl.value.split(',').map(s => s.trim()).filter(Boolean);
-  }
-
-  // emit演算子 (v2)
-  const emitValueEl = el('[data-k="emit_value"]', editorBody);
-  if (emitValueEl && emitValueEl.value.trim()) {
-    const valueStr = emitValueEl.value.trim();
-    b.value = safeParseJson(valueStr, valueStr);
-  }
-
-  // recurse演算子 (v2)
-  const recurseNameEl = el('[data-k="recurse_name"]', editorBody);
-  if (recurseNameEl && recurseNameEl.value.trim()) {
-    b.name = recurseNameEl.value.trim();
-  }
-  const recurseFuncEl = el('[data-k="recurse_function"]', editorBody);
-  if (recurseFuncEl && recurseFuncEl.value.trim()) {
-    b.function = safeParseJson(recurseFuncEl.value.trim(), {});
-  }
-  const recurseWithEl = el('[data-k="recurse_with"]', editorBody);
-  if (recurseWithEl && recurseWithEl.value.trim()) {
-    b.with = safeParseJson(recurseWithEl.value.trim(), {});
-  }
-  const recurseBudgetEl = el('[data-k="recurse_budget"]', editorBody);
-  if (recurseBudgetEl && recurseBudgetEl.value.trim()) {
-    b.budget = safeParseJson(recurseBudgetEl.value.trim(), null);
-  }
-
-  // outputs
-  const rows = els('#logicOutputs .row', editorBody);
-  const outs = [];
-  for (let i = 0; i < rows.length; i += 2) {
-    const r1 = rows[i];
-    const r2 = rows[i + 1];
-    if (!r1) continue;
-    const name = el('[data-o="name"]', r1)?.value.trim() || '';
-    if (!name) continue;
-    const from = el('[data-o="from"]', r1)?.value || 'boolean';
-    const src = el('[data-o="source"]', r1)?.value?.trim() || '';
-    const jw = el('[data-o="join_with"]', r1)?.value || '';
-
-    const testStr = r2 ? (el('[data-o="test"]', r2)?.value.trim() || '') : '';
-    const limitStr = r2 ? (el('[data-o="limit"]', r2)?.value.trim() || '') : '';
-    const offsetStr = r2 ? (el('[data-o="offset"]', r2)?.value.trim() || '') : '';
-
-    const o = { name, from };
-    if (src) o.source = src;
-    if (jw) o.join_with = jw;
-    if (testStr) {
-      const parsed = safeParseJson(testStr, null);
-      if (parsed !== null) o.test = parsed;
+  switch (newOp) {
+    case 'if': {
+      // if演算子用フィールドのみ読み取り
+      const condStr = el('[data-k="cond"]', editorBody)?.value.trim() || '';
+      b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
+      b.then = el('[data-k="then"]', editorBody)?.value || undefined;
+      b.else = el('[data-k="else"]', editorBody)?.value || undefined;
+      // 不要なプロパティを削除
+      delete b.operands; delete b.list; delete b.parse; delete b.regex_pattern;
+      delete b.var; delete b.drop_empty; delete b.where; delete b.map;
+      delete b.value; delete b.bindings; delete b.body; delete b.accumulator;
+      delete b.init; delete b.step; delete b.budget; delete b.function;
+      delete b.with; delete b.returns;
+      break;
     }
-    if (limitStr !== '') o.limit = toMaybeNumber(limitStr);
-    if (offsetStr !== '') o.offset = toMaybeNumber(offsetStr);
-    outs.push(o);
-  }
-  b.outputs = outs;
 
-  const runIfStr = el('[data-k="run_if"]', editorBody).value.trim();
-  b.run_if = runIfStr ? safeParseJson(runIfStr, null) : null;
-  const oe = el('[data-k="on_error"]', editorBody).value;
+    case 'and':
+    case 'or':
+    case 'not': {
+      // and/or/not演算子用フィールド
+      const opsStr = el('[data-k="operands"]', editorBody)?.value.trim() || '';
+      b.operands = opsStr ? safeParseJson(opsStr, []) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else;
+      delete b.list; delete b.parse; delete b.regex_pattern;
+      delete b.var; delete b.drop_empty; delete b.where; delete b.map;
+      delete b.value; delete b.bindings; delete b.body; delete b.accumulator;
+      delete b.init; delete b.step; delete b.budget; delete b.function;
+      delete b.with; delete b.returns;
+      break;
+    }
+
+    case 'for': {
+      // for演算子用フィールド
+      b.list = el('[data-k="list"]', editorBody)?.value || undefined;
+      b.parse = el('[data-k="parse"]', editorBody)?.value || undefined;
+      b.regex_pattern = el('[data-k="regex_pattern"]', editorBody)?.value || undefined;
+      b.var = el('[data-k="var"]', editorBody)?.value.trim() || undefined;
+      const dropSel = el('[data-k="drop_empty"]', editorBody)?.value || '';
+      b.drop_empty = dropSel === '' ? undefined : (dropSel === 'true');
+      const whereStr = el('[data-k="where"]', editorBody)?.value.trim() || '';
+      b.where = whereStr ? safeParseJson(whereStr, null) : undefined;
+      b.map = el('[data-k="map"]', editorBody)?.value || undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.value; delete b.bindings; delete b.body; delete b.accumulator;
+      delete b.init; delete b.step; delete b.budget; delete b.function;
+      delete b.with; delete b.returns;
+      break;
+    }
+
+    case 'set': {
+      // set演算子用フィールド
+      b.var = el('[data-k="set_var"]', editorBody)?.value.trim() || undefined;
+      const setValueStr = el('[data-k="set_value"]', editorBody)?.value.trim() || '';
+      b.value = setValueStr ? safeParseJson(setValueStr, setValueStr) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.list; delete b.parse; delete b.regex_pattern; delete b.drop_empty;
+      delete b.where; delete b.map; delete b.bindings; delete b.body;
+      delete b.accumulator; delete b.init; delete b.step; delete b.budget;
+      delete b.function; delete b.with; delete b.returns;
+      break;
+    }
+
+    case 'let': {
+      // let演算子用フィールド
+      const bindingsStr = el('[data-k="let_bindings"]', editorBody)?.value.trim() || '';
+      b.bindings = bindingsStr ? safeParseJson(bindingsStr, {}) : undefined;
+      const bodyStr = el('[data-k="let_body"]', editorBody)?.value.trim() || '';
+      b.body = bodyStr ? safeParseJson(bodyStr, {}) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.list; delete b.parse; delete b.regex_pattern; delete b.var;
+      delete b.drop_empty; delete b.where; delete b.map; delete b.value;
+      delete b.accumulator; delete b.init; delete b.step; delete b.budget;
+      delete b.function; delete b.with; delete b.returns;
+      break;
+    }
+
+    case 'reduce': {
+      // reduce演算子用フィールド
+      b.list = el('[data-k="reduce_list"]', editorBody)?.value.trim() || undefined;
+      const valueStr = el('[data-k="reduce_value"]', editorBody)?.value.trim() || '';
+      b.value = valueStr ? safeParseJson(valueStr, valueStr) : undefined;
+      b.var = el('[data-k="reduce_var"]', editorBody)?.value.trim() || undefined;
+      b.accumulator = el('[data-k="reduce_accumulator"]', editorBody)?.value.trim() || undefined;
+      const bodyStr = el('[data-k="reduce_body"]', editorBody)?.value.trim() || '';
+      b.body = bodyStr ? safeParseJson(bodyStr, {}) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.parse; delete b.regex_pattern; delete b.drop_empty; delete b.where;
+      delete b.map; delete b.bindings; delete b.init; delete b.step;
+      delete b.budget; delete b.function; delete b.with; delete b.returns;
+      break;
+    }
+
+    case 'while': {
+      // while演算子用フィールド
+      const initStr = el('[data-k="while_init"]', editorBody)?.value.trim() || '';
+      b.init = initStr ? safeParseJson(initStr, {}) : undefined;
+      const condStr = el('[data-k="while_cond"]', editorBody)?.value.trim() || '';
+      b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
+      const stepStr = el('[data-k="while_step"]', editorBody)?.value.trim() || '';
+      b.step = stepStr ? safeParseJson(stepStr, {}) : undefined;
+      const budgetStr = el('[data-k="while_budget"]', editorBody)?.value.trim() || '';
+      b.budget = budgetStr ? safeParseJson(budgetStr, null) : undefined;
+      // 不要なプロパティを削除
+      delete b.then; delete b.else; delete b.operands;
+      delete b.list; delete b.parse; delete b.regex_pattern; delete b.var;
+      delete b.drop_empty; delete b.where; delete b.map; delete b.value;
+      delete b.bindings; delete b.body; delete b.accumulator;
+      delete b.function; delete b.with; delete b.returns;
+      break;
+    }
+
+    case 'call': {
+      // call演算子用フィールド
+      b.function = el('[data-k="call_function"]', editorBody)?.value.trim() || undefined;
+      const withStr = el('[data-k="call_with"]', editorBody)?.value.trim() || '';
+      b.with = withStr ? safeParseJson(withStr, {}) : undefined;
+      const returnsStr = el('[data-k="call_returns"]', editorBody)?.value.trim() || '';
+      b.returns = returnsStr ? returnsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.list; delete b.parse; delete b.regex_pattern; delete b.var;
+      delete b.drop_empty; delete b.where; delete b.map; delete b.value;
+      delete b.bindings; delete b.body; delete b.accumulator;
+      delete b.init; delete b.step; delete b.budget;
+      break;
+    }
+
+    case 'emit': {
+      // emit演算子用フィールド
+      const valueStr = el('[data-k="emit_value"]', editorBody)?.value.trim() || '';
+      b.value = valueStr ? safeParseJson(valueStr, valueStr) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.list; delete b.parse; delete b.regex_pattern; delete b.var;
+      delete b.drop_empty; delete b.where; delete b.map; delete b.bindings;
+      delete b.body; delete b.accumulator; delete b.init; delete b.step;
+      delete b.budget; delete b.function; delete b.with; delete b.returns;
+      // emitの場合はoutputsを空にする
+      b.outputs = [];
+      break;
+    }
+
+    case 'recurse': {
+      // recurse演算子用フィールド
+      const recurseNameVal = el('[data-k="recurse_name"]', editorBody)?.value.trim() || '';
+      if (recurseNameVal) b.name = recurseNameVal;
+      const funcStr = el('[data-k="recurse_function"]', editorBody)?.value.trim() || '';
+      b.function = funcStr ? safeParseJson(funcStr, {}) : undefined;
+      const withStr = el('[data-k="recurse_with"]', editorBody)?.value.trim() || '';
+      b.with = withStr ? safeParseJson(withStr, {}) : undefined;
+      const budgetStr = el('[data-k="recurse_budget"]', editorBody)?.value.trim() || '';
+      b.budget = budgetStr ? safeParseJson(budgetStr, null) : undefined;
+      // 不要なプロパティを削除
+      delete b.cond; delete b.then; delete b.else; delete b.operands;
+      delete b.list; delete b.parse; delete b.regex_pattern; delete b.var;
+      delete b.drop_empty; delete b.where; delete b.map; delete b.value;
+      delete b.bindings; delete b.body; delete b.accumulator;
+      delete b.init; delete b.step; delete b.returns;
+      break;
+    }
+  }
+
+  // outputs（emit以外）
+  if (newOp !== 'emit') {
+    const rows = els('#logicOutputs .row', editorBody);
+    const outs = [];
+    let i = 0;
+    while (i < rows.length) {
+      const r1 = rows[i];
+      if (!r1) { i++; continue; }
+
+      const nameEl = el('[data-o="name"]', r1);
+      if (!nameEl) { i++; continue; }
+
+      const name = nameEl.value.trim();
+      if (!name) { i++; continue; }
+
+      const from = el('[data-o="from"]', r1)?.value || 'boolean';
+      const srcEl = el('[data-o="source"]', r1);
+      const src = srcEl ? srcEl.value?.trim() || '' : '';
+      const jwEl = el('[data-o="join_with"]', r1);
+      const jw = jwEl ? jwEl.value || '' : '';
+
+      const o = { name, from };
+      if (src) o.source = src;
+      if (jw) o.join_with = jw;
+
+      // forの場合のみ2行目をチェック
+      if (newOp === 'for' && i + 1 < rows.length) {
+        const r2 = rows[i + 1];
+        const testEl = el('[data-o="test"]', r2);
+        if (testEl) {
+          const testStr = testEl.value.trim();
+          const limitStr = el('[data-o="limit"]', r2)?.value.trim() || '';
+          const offsetStr = el('[data-o="offset"]', r2)?.value.trim() || '';
+
+          if (testStr) {
+            const parsed = safeParseJson(testStr, null);
+            if (parsed !== null) o.test = parsed;
+          }
+          if (limitStr !== '') o.limit = toMaybeNumber(limitStr);
+          if (offsetStr !== '') o.offset = toMaybeNumber(offsetStr);
+          i += 2;
+          outs.push(o);
+          continue;
+        }
+      }
+
+      i++;
+      outs.push(o);
+    }
+    b.outputs = outs;
+  }
+
+  // 共通オプション
+  const runIfStr = el('[data-k="run_if"]', editorBody)?.value.trim() || '';
+  b.run_if = runIfStr ? safeParseJson(runIfStr, null) : undefined;
+  const oe = el('[data-k="on_error"]', editorBody)?.value || '';
   b.on_error = oe || undefined;
 }
 

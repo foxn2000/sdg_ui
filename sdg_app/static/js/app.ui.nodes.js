@@ -4,6 +4,9 @@
 // - 提供: bindLibraryDnD, addBlock, renderNodes, removeBlock, nudgeSelected
 // =========================
 
+// ロジック系ブロックタイプのリスト
+const LOGIC_BLOCK_TYPES = ['if', 'and', 'or', 'not', 'for', 'set', 'let', 'reduce', 'while', 'call', 'emit', 'recurse'];
+
 // -------------------------
 // Block Library (DnD + keyboard)
 // -------------------------
@@ -67,30 +70,12 @@ function addBlock(type, pos) {
       run_if: null,
       on_error: 'fail'
     };
+  } else if (LOGIC_BLOCK_TYPES.includes(type)) {
+    // 各種ロジックブロック（if, and, or, not, for, set, let, reduce, while, call, emit, recurse）
+    block = createLogicBlock(id, type, pos);
   } else if (type === 'logic') {
-    block = {
-      id, type, title: 'Logic', exec: guessExec(),
-      position: snap(pos),
-      name: '',
-      op: 'if',
-      cond: { equals: ["{IsUrgent}", "yes"] },
-      then: 'run',
-      else: 'skip',
-      operands: undefined,
-      list: '',
-      parse: '',
-      regex_pattern: '',
-      var: '',
-      drop_empty: undefined,
-      where: undefined,
-      map: '',
-      outputs: [
-        { name: 'ShouldWrite', from: 'value' },
-        { name: 'IsUrgentBool', from: 'boolean' }
-      ],
-      run_if: null,
-      on_error: 'fail'
-    };
+    // 従来の汎用logicタイプ（互換性維持）
+    block = createLogicBlock(id, 'if', pos);
   } else if (type === 'python') {
     block = {
       id, type, title: 'Code', exec: guessExec(),
@@ -122,6 +107,161 @@ function addBlock(type, pos) {
   drawConnections();
 }
 
+// 各opタイプに応じたロジックブロックを生成
+function createLogicBlock(id, blockType, pos) {
+  const baseBlock = {
+    id,
+    type: 'logic',  // YAMLには type: logic として出力
+    op: blockType,  // 実際のoperation
+    title: blockType.toUpperCase(),
+    exec: guessExec(),
+    position: snap(pos),
+    name: '',
+    run_if: null,
+    on_error: 'fail',
+    outputs: []
+  };
+
+  switch (blockType) {
+    case 'if':
+      return {
+        ...baseBlock,
+        cond: { equals: ["{Var}", "value"] },
+        then: 'run',
+        else: 'skip',
+        outputs: [
+          { name: 'Result', from: 'boolean' }
+        ]
+      };
+
+    case 'and':
+      return {
+        ...baseBlock,
+        operands: [
+          { equals: ["{A}", "yes"] },
+          { equals: ["{B}", "yes"] }
+        ],
+        outputs: [
+          { name: 'AllTrue', from: 'boolean' }
+        ]
+      };
+
+    case 'or':
+      return {
+        ...baseBlock,
+        operands: [
+          { equals: ["{A}", "yes"] },
+          { equals: ["{B}", "yes"] }
+        ],
+        outputs: [
+          { name: 'AnyTrue', from: 'boolean' }
+        ]
+      };
+
+    case 'not':
+      return {
+        ...baseBlock,
+        operands: [
+          { equals: ["{A}", "yes"] }
+        ],
+        outputs: [
+          { name: 'Negated', from: 'boolean' }
+        ]
+      };
+
+    case 'for':
+      return {
+        ...baseBlock,
+        list: '{Items}',
+        parse: 'lines',
+        regex_pattern: '',
+        var: 'item',
+        drop_empty: true,
+        where: undefined,
+        map: '',
+        outputs: [
+          { name: 'ItemCount', from: 'count' },
+          { name: 'ItemList', from: 'list' }
+        ]
+      };
+
+    case 'set':
+      return {
+        ...baseBlock,
+        var: 'MyVar',
+        value: '{SomeValue}',
+        outputs: []
+      };
+
+    case 'let':
+      return {
+        ...baseBlock,
+        bindings: { x: '{Input}' },
+        body: { add: ['{x}', 1] },
+        outputs: [
+          { name: 'LetResult', from: 'value' }
+        ]
+      };
+
+    case 'reduce':
+      return {
+        ...baseBlock,
+        list: '{Items}',
+        value: 0,
+        var: 'item',
+        accumulator: 'acc',
+        body: { add: ['{acc}', 1] },
+        outputs: [
+          { name: 'Total', from: 'value' }
+        ]
+      };
+
+    case 'while':
+      return {
+        ...baseBlock,
+        init: { counter: 0 },
+        cond: { lt: ['{counter}', 10] },
+        step: { set: { counter: { add: ['{counter}', 1] } } },
+        budget: { max_iters: 100 },
+        outputs: [
+          { name: 'FinalCounter', from: 'value' }
+        ]
+      };
+
+    case 'call':
+      return {
+        ...baseBlock,
+        function: 'myFunction',
+        with: { arg1: '{Input1}' },
+        returns: ['result'],
+        outputs: [
+          { name: 'CallResult', from: 'value' }
+        ]
+      };
+
+    case 'emit':
+      return {
+        ...baseBlock,
+        value: '{OutputValue}',
+        outputs: []
+      };
+
+    case 'recurse':
+      return {
+        ...baseBlock,
+        function: { /* recursive function body */ },
+        with: { depth: 0 },
+        budget: { max_depth: 10 },
+        outputs: [
+          { name: 'RecurseResult', from: 'value' }
+        ]
+      };
+
+    default:
+      return baseBlock;
+  }
+}
+
 function guessExec() {
   const max = state.blocks.reduce((m, b) => Math.max(m, b.exec || 0), 0);
   return (max || 0) + 1;
@@ -138,10 +278,17 @@ function renderNodes() {
     node.style.left = (b.position?.x ?? 40) + 'px';
     node.style.top = (b.position?.y ?? 40) + 'px';
 
+    // ブロックタイプの表示名を決定
+    let displayType = b.type.toUpperCase();
+    if (b.type === 'logic' && b.op) {
+      displayType = b.op.toUpperCase();
+      node.dataset.op = b.op;  // CSS用のdata-op属性
+    }
+
     node.innerHTML = `
       <div class="node-header" data-drag>
         <div>
-          <span class="node-type">${b.type.toUpperCase()}</span>
+          <span class="node-type">${displayType}</span>
           <span class="node-title">• ${escapeHtml(b.title || b.name || b.py_name || '')}</span>
         </div>
         <div class="node-badges">

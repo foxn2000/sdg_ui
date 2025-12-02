@@ -249,6 +249,10 @@ function bindLibraryDnD() {
 // -------------------------
 // Blocks: CRUD + Render
 // -------------------------
+
+// ロジック系ブロックタイプのリスト
+const LOGIC_BLOCK_TYPES = ['if', 'and', 'or', 'not', 'for', 'set', 'let', 'reduce', 'while', 'call', 'emit', 'recurse'];
+
 function addBlock(type, pos) {
   const id = 'b' + state.idCounter++;
   let block;
@@ -264,30 +268,9 @@ function addBlock(type, pos) {
       run_if: null,
       on_error: 'fail'
     };
-  } else if (type === 'logic') {
-    block = {
-      id, type, title: 'Logic', exec: guessExec(),
-      position: snap(pos),
-      name: '',
-      op: 'if',
-      cond: { equals: ["{IsUrgent}", "yes"] },
-      then: 'run',
-      else: 'skip',
-      operands: undefined,
-      list: '',
-      parse: '',
-      regex_pattern: '',
-      var: '',
-      drop_empty: undefined,
-      where: undefined,
-      map: '',
-      outputs: [
-        { name: 'ShouldWrite', from: 'value' },
-        { name: 'IsUrgentBool', from: 'boolean' }
-      ],
-      run_if: null,
-      on_error: 'fail'
-    };
+  } else if (LOGIC_BLOCK_TYPES.includes(type)) {
+    // 各種ロジックブロック（if, and, or, not, for, set, let, reduce, while, call, emit, recurse）
+    block = createLogicBlock(id, type, pos);
   } else if (type === 'python') {
     block = {
       id, type, title: 'Code', exec: guessExec(),
@@ -324,6 +307,161 @@ function guessExec() {
   return (max || 0) + 1;
 }
 
+// 各opタイプに応じたロジックブロックを生成
+function createLogicBlock(id, blockType, pos) {
+  const baseBlock = {
+    id,
+    type: 'logic',  // YAMLには type: logic として出力
+    op: blockType,  // 実際のoperation
+    title: blockType.toUpperCase(),
+    exec: guessExec(),
+    position: snap(pos),
+    name: '',
+    run_if: null,
+    on_error: 'fail',
+    outputs: []
+  };
+
+  switch (blockType) {
+    case 'if':
+      return {
+        ...baseBlock,
+        cond: { equals: ["{Var}", "value"] },
+        then: 'run',
+        else: 'skip',
+        outputs: [
+          { name: 'Result', from: 'boolean' }
+        ]
+      };
+
+    case 'and':
+      return {
+        ...baseBlock,
+        operands: [
+          { equals: ["{A}", "yes"] },
+          { equals: ["{B}", "yes"] }
+        ],
+        outputs: [
+          { name: 'AllTrue', from: 'boolean' }
+        ]
+      };
+
+    case 'or':
+      return {
+        ...baseBlock,
+        operands: [
+          { equals: ["{A}", "yes"] },
+          { equals: ["{B}", "yes"] }
+        ],
+        outputs: [
+          { name: 'AnyTrue', from: 'boolean' }
+        ]
+      };
+
+    case 'not':
+      return {
+        ...baseBlock,
+        operands: [
+          { equals: ["{A}", "yes"] }
+        ],
+        outputs: [
+          { name: 'Negated', from: 'boolean' }
+        ]
+      };
+
+    case 'for':
+      return {
+        ...baseBlock,
+        list: '{Items}',
+        parse: 'lines',
+        regex_pattern: '',
+        var: 'item',
+        drop_empty: true,
+        where: undefined,
+        map: '',
+        outputs: [
+          { name: 'ItemCount', from: 'count' },
+          { name: 'ItemList', from: 'list' }
+        ]
+      };
+
+    case 'set':
+      return {
+        ...baseBlock,
+        var: 'MyVar',
+        value: '{SomeValue}',
+        outputs: []
+      };
+
+    case 'let':
+      return {
+        ...baseBlock,
+        bindings: { x: '{Input}' },
+        body: { add: ['{x}', 1] },
+        outputs: [
+          { name: 'LetResult', from: 'value' }
+        ]
+      };
+
+    case 'reduce':
+      return {
+        ...baseBlock,
+        list: '{Items}',
+        value: 0,
+        var: 'item',
+        accumulator: 'acc',
+        body: { add: ['{acc}', 1] },
+        outputs: [
+          { name: 'Total', from: 'value' }
+        ]
+      };
+
+    case 'while':
+      return {
+        ...baseBlock,
+        init: { counter: 0 },
+        cond: { lt: ['{counter}', 10] },
+        step: { set: { counter: { add: ['{counter}', 1] } } },
+        budget: { max_iters: 100 },
+        outputs: [
+          { name: 'FinalCounter', from: 'value' }
+        ]
+      };
+
+    case 'call':
+      return {
+        ...baseBlock,
+        function: 'myFunction',
+        with: { arg1: '{Input1}' },
+        returns: ['result'],
+        outputs: [
+          { name: 'CallResult', from: 'value' }
+        ]
+      };
+
+    case 'emit':
+      return {
+        ...baseBlock,
+        value: '{OutputValue}',
+        outputs: []
+      };
+
+    case 'recurse':
+      return {
+        ...baseBlock,
+        function: { /* recursive function body */ },
+        with: { depth: 0 },
+        budget: { max_depth: 10 },
+        outputs: [
+          { name: 'RecurseResult', from: 'value' }
+        ]
+      };
+
+    default:
+      return baseBlock;
+  }
+}
+
 let wasDraggingNode = false;
 
 function renderNodes() {
@@ -335,10 +473,17 @@ function renderNodes() {
     node.style.left = (b.position?.x ?? 40) + 'px';
     node.style.top = (b.position?.y ?? 40) + 'px';
 
+    // ブロックタイプの表示名を決定
+    let displayType = b.type.toUpperCase();
+    if (b.type === 'logic' && b.op) {
+      displayType = b.op.toUpperCase();
+      node.dataset.op = b.op;  // CSS用のdata-op属性
+    }
+
     node.innerHTML = `
       <div class="node-header" data-drag>
         <div>
-          <span class="node-type">${b.type.toUpperCase()}</span>
+          <span class="node-type">${displayType}</span>
           <span class="node-title">• ${escapeHtml(b.title || b.name || b.py_name || '')}</span>
         </div>
         <div class="node-badges">
@@ -852,60 +997,210 @@ function readAiFormInto(b) {
 function buildLogicForm(b) {
   const wrap = document.createElement('div');
   wrap.className = 'form-grid';
+
+  // opに基づいた固有のフォーム生成
+  const op = b.op || 'if';
+  let opSpecificHtml = '';
+
+  switch (op) {
+    case 'if':
+      opSpecificHtml = `
+        <details class="full" open><summary>条件・分岐設定</summary>
+          <div class="form-grid">
+            <label>cond（JSON条件式）</label>
+            <input class="full" data-k="cond" value='${escapeAttr(JSON.stringify(b.cond || {}))}'>
+            <div class="small-note full">例: {"equals":["{Var}","value"]}, {"gt":["{Score}",80]}, {"contains":["{Text}","keyword"]}</div>
+            <label>then（条件真時の動作）</label>
+            <input data-k="then" value="${escapeAttr(b.then || '')}">
+            <label>else（条件偽時の動作）</label>
+            <input data-k="else" value="${escapeAttr(b.else || '')}">
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'and':
+    case 'or':
+      opSpecificHtml = `
+        <details class="full" open><summary>${op.toUpperCase()}条件設定</summary>
+          <div class="form-grid">
+            <label>operands（JSON配列：複数の条件）</label>
+            <textarea class="full" rows="4" data-k="operands">${b.operands ? escapeAttr(JSON.stringify(b.operands, null, 2)) : '[]'}</textarea>
+            <div class="small-note full">例: [{"equals":["{A}","yes"]},{"equals":["{B}","yes"]}]</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'not':
+      opSpecificHtml = `
+        <details class="full" open><summary>NOT条件設定</summary>
+          <div class="form-grid">
+            <label>operands（否定する条件、JSON配列で1つ）</label>
+            <textarea class="full" rows="2" data-k="operands">${b.operands ? escapeAttr(JSON.stringify(b.operands, null, 2)) : '[]'}</textarea>
+            <div class="small-note full">例: [{"equals":["{Flag}","true"]}]</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'for':
+      opSpecificHtml = `
+        <details class="full" open><summary>FORループ設定</summary>
+          <div class="form-grid">
+            <label>list（イテレートするリスト/変数）</label>
+            <input class="full" data-k="list" value="${escapeAttr(b.list || '')}">
+            <label>parse（パース方法）</label>
+            <select data-k="parse">
+              <option value="">(default: lines)</option>
+              <option value="lines" ${b.parse === 'lines' ? 'selected' : ''}>lines（行分割）</option>
+              <option value="csv" ${b.parse === 'csv' ? 'selected' : ''}>csv</option>
+              <option value="json" ${b.parse === 'json' ? 'selected' : ''}>json</option>
+              <option value="regex" ${b.parse === 'regex' ? 'selected' : ''}>regex</option>
+            </select>
+            <label>regex_pattern（parse=regex時）</label>
+            <input data-k="regex_pattern" class="full" value="${escapeAttr(b.regex_pattern || '')}">
+            <label>var（ループ変数名、既定: item）</label>
+            <input data-k="var" value="${escapeAttr(b.var || '')}">
+            <label>drop_empty（空要素を除外）</label>
+            <select data-k="drop_empty">
+              <option value="">(default: true)</option>
+              <option value="true" ${b.drop_empty === true ? 'selected' : ''}>true</option>
+              <option value="false" ${b.drop_empty === false ? 'selected' : ''}>false</option>
+            </select>
+            <label>where（フィルタ条件, JSON）</label>
+            <input data-k="where" class="full" value='${b.where ? escapeAttr(JSON.stringify(b.where)) : ''}'>
+            <label>map（変換テンプレート）</label>
+            <input data-k="map" class="full" value="${escapeAttr(b.map || '')}">
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'set':
+      opSpecificHtml = `
+        <details class="full" open><summary>SET変数設定</summary>
+          <div class="form-grid">
+            <label>var（設定する変数名）</label>
+            <input class="full" data-k="var" value="${escapeAttr(b.var || '')}">
+            <label>value（設定する値）</label>
+            <input class="full" data-k="value" value="${escapeAttr(typeof b.value === 'object' ? JSON.stringify(b.value) : (b.value || ''))}">
+            <div class="small-note full">テンプレート変数 {VarName} を使用可能</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'let':
+      opSpecificHtml = `
+        <details class="full" open><summary>LETローカル変数設定</summary>
+          <div class="form-grid">
+            <label>bindings（バインディング、JSON）</label>
+            <textarea class="full" rows="3" data-k="bindings">${b.bindings ? escapeAttr(JSON.stringify(b.bindings, null, 2)) : '{}'}</textarea>
+            <div class="small-note full">例: {"x": "{Input}", "y": 10}</div>
+            <label>body（処理本体、JSON）</label>
+            <textarea class="full" rows="3" data-k="body">${b.body ? escapeAttr(JSON.stringify(b.body, null, 2)) : '{}'}</textarea>
+            <div class="small-note full">例: {"add": ["{x}", "{y}"]}</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'reduce':
+      opSpecificHtml = `
+        <details class="full" open><summary>REDUCE集約設定</summary>
+          <div class="form-grid">
+            <label>list（集約するリスト）</label>
+            <input class="full" data-k="list" value="${escapeAttr(b.list || '')}">
+            <label>value（初期値、JSONまたは値）</label>
+            <input class="full" data-k="value" value="${escapeAttr(typeof b.value === 'object' ? JSON.stringify(b.value) : (b.value !== undefined ? b.value : ''))}">
+            <label>var（要素変数名）</label>
+            <input data-k="var" value="${escapeAttr(b.var || '')}">
+            <label>accumulator（累積変数名）</label>
+            <input data-k="accumulator" value="${escapeAttr(b.accumulator || '')}">
+            <label>body（集約処理、JSON）</label>
+            <textarea class="full" rows="3" data-k="body">${b.body ? escapeAttr(JSON.stringify(b.body, null, 2)) : '{}'}</textarea>
+            <div class="small-note full">例: {"add": ["{acc}", 1]}</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'while':
+      opSpecificHtml = `
+        <details class="full" open><summary>WHILEループ設定</summary>
+          <div class="form-grid">
+            <label>init（初期状態、JSON）</label>
+            <textarea class="full" rows="2" data-k="init">${b.init ? escapeAttr(JSON.stringify(b.init, null, 2)) : '{}'}</textarea>
+            <label>cond（継続条件、JSON）</label>
+            <input class="full" data-k="cond" value='${escapeAttr(JSON.stringify(b.cond || {}))}'>
+            <label>step（ステップ処理、JSON）</label>
+            <textarea class="full" rows="2" data-k="step">${b.step ? escapeAttr(JSON.stringify(b.step, null, 2)) : '{}'}</textarea>
+            <label>budget（ループ制限、JSON）</label>
+            <input class="full" data-k="budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
+            <div class="small-note full">例: {"max_iters": 100}</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'call':
+      opSpecificHtml = `
+        <details class="full" open><summary>CALL関数呼び出し設定</summary>
+          <div class="form-grid">
+            <label>function（呼び出す関数名）</label>
+            <input class="full" data-k="function" value="${escapeAttr(b.function || '')}">
+            <label>with（引数、JSON）</label>
+            <textarea class="full" rows="2" data-k="with">${b.with ? escapeAttr(JSON.stringify(b.with, null, 2)) : '{}'}</textarea>
+            <label>returns（戻り値の変数名リスト、カンマ区切り）</label>
+            <input class="full" data-k="returns" value="${escapeAttr((b.returns || []).join(', '))}">
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'emit':
+      opSpecificHtml = `
+        <details class="full" open><summary>EMIT出力設定</summary>
+          <div class="form-grid">
+            <label>value（出力する値）</label>
+            <input class="full" data-k="value" value="${escapeAttr(typeof b.value === 'object' ? JSON.stringify(b.value) : (b.value || ''))}">
+            <div class="small-note full">テンプレート変数 {VarName} を使用可能</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    case 'recurse':
+      opSpecificHtml = `
+        <details class="full" open><summary>RECURSE再帰呼び出し設定</summary>
+          <div class="form-grid">
+            <label>function（再帰関数本体、JSON）</label>
+            <textarea class="full" rows="3" data-k="function">${b.function && typeof b.function === 'object' ? escapeAttr(JSON.stringify(b.function, null, 2)) : escapeAttr(b.function || '')}</textarea>
+            <label>with（引数、JSON）</label>
+            <textarea class="full" rows="2" data-k="with">${b.with ? escapeAttr(JSON.stringify(b.with, null, 2)) : '{}'}</textarea>
+            <label>budget（再帰制限、JSON）</label>
+            <input class="full" data-k="budget" value='${b.budget ? escapeAttr(JSON.stringify(b.budget)) : ''}'>
+            <div class="small-note full">例: {"max_depth": 10}</div>
+          </div>
+        </details>
+      `;
+      break;
+
+    default:
+      opSpecificHtml = `<div class="small-note">未対応のop: ${escapeHtml(op)}</div>`;
+  }
+
   wrap.innerHTML = `
     <label>name（任意）</label>
     <input data-k="name" value="${escapeAttr(b.name || '')}">
 
-    <label>op</label>
-    <select data-k="op">
-      <option value="if" ${b.op === 'if' ? 'selected' : ''}>if</option>
-      <option value="and" ${b.op === 'and' ? 'selected' : ''}>and</option>
-      <option value="or" ${b.op === 'or' ? 'selected' : ''}>or</option>
-      <option value="not" ${b.op === 'not' ? 'selected' : ''}>not</option>
-      <option value="for" ${b.op === 'for' ? 'selected' : ''}>for</option>
-    </select>
+    <input type="hidden" data-k="op" value="${escapeAttr(op)}">
+    <div class="small-note full" style="margin-bottom: 1rem;">
+      <strong>演算タイプ:</strong> <span class="badge">${op.toUpperCase()}</span>
+    </div>
 
-    <details class="full"><summary>条件・分岐（op=if時）</summary>
-      <div class="form-grid">
-        <label>cond（JSON）</label>
-        <input class="full" data-k="cond" value='${escapeAttr(JSON.stringify(b.cond || {}))}'>
-        <label>then</label><input data-k="then" value="${escapeAttr(b.then || '')}">
-        <label>else</label><input data-k="else" value="${escapeAttr(b.else || '')}">
-      </div>
-    </details>
-
-    <details class="full"><summary>operands（op=and/or/not時, JSON配列）</summary>
-      <input class="full" data-k="operands" value='${b.operands ? escapeAttr(JSON.stringify(b.operands)) : ''}'>
-    </details>
-
-    <details class="full"><summary>for 仕様（op=for時）</summary>
-      <div class="form-grid">
-        <label>list</label>
-        <input class="full" data-k="list" value="${escapeAttr(b.list || '')}">
-        <label>parse</label>
-        <select data-k="parse">
-          <option value="">(default: lines)</option>
-          <option value="lines" ${b.parse === 'lines' ? 'selected' : ''}>lines</option>
-          <option value="csv" ${b.parse === 'csv' ? 'selected' : ''}>csv</option>
-          <option value="json" ${b.parse === 'json' ? 'selected' : ''}>json</option>
-          <option value="regex" ${b.parse === 'regex' ? 'selected' : ''}>regex</option>
-        </select>
-        <label>regex_pattern（parse=regex時）</label>
-        <input data-k="regex_pattern" class="full" value="${escapeAttr(b.regex_pattern || '')}">
-        <label>var（既定: item）</label>
-        <input data-k="var" value="${escapeAttr(b.var || '')}">
-        <label>drop_empty</label>
-        <select data-k="drop_empty">
-          <option value="">(default: true)</option>
-          <option value="true" ${b.drop_empty === true ? 'selected' : ''}>true</option>
-          <option value="false" ${b.drop_empty === false ? 'selected' : ''}>false</option>
-        </select>
-        <label>where（条件, JSON）</label>
-        <input data-k="where" class="full" value='${b.where ? escapeAttr(JSON.stringify(b.where)) : ''}'>
-        <label>map（テンプレート）</label>
-        <input data-k="map" class="full" value="${escapeAttr(b.map || '')}">
-      </div>
-    </details>
+    ${opSpecificHtml}
 
     <details class="full" open><summary>outputs（任意）</summary>
       <fieldset class="inline-list" id="logicOutputs">
@@ -984,30 +1279,173 @@ function readLogicFormInto(b) {
   b.name = el('[data-k="name"]', editorBody).value.trim();
   b.op = el('[data-k="op"]', editorBody).value;
 
-  const condStr = el('[data-k="cond"]', editorBody).value.trim();
-  b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
+  const op = b.op || 'if';
 
-  b.then = el('[data-k="then"]', editorBody).value;
-  b.else = el('[data-k="else"]', editorBody).value;
+  // opに応じた値の読み取り
+  switch (op) {
+    case 'if': {
+      const condEl = el('[data-k="cond"]', editorBody);
+      const condStr = condEl ? condEl.value.trim() : '';
+      b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
 
-  const opsStr = el('[data-k="operands"]', editorBody).value.trim();
-  b.operands = opsStr ? safeParseJson(opsStr, []) : undefined;
+      const thenEl = el('[data-k="then"]', editorBody);
+      const elseEl = el('[data-k="else"]', editorBody);
+      b.then = thenEl ? thenEl.value : undefined;
+      b.else = elseEl ? elseEl.value : undefined;
+      break;
+    }
 
-  // for spec
-  b.list = el('[data-k="list"]', editorBody).value;
-  b.parse = el('[data-k="parse"]', editorBody).value || undefined;
-  b.regex_pattern = el('[data-k="regex_pattern"]', editorBody).value || undefined;
-  const varVal = el('[data-k="var"]', editorBody).value.trim();
-  b.var = varVal || undefined;
-  const dropSel = el('[data-k="drop_empty"]', editorBody).value;
-  if (dropSel === '') {
-    b.drop_empty = undefined;
-  } else {
-    b.drop_empty = (dropSel === 'true');
+    case 'and':
+    case 'or':
+    case 'not': {
+      const opsEl = el('[data-k="operands"]', editorBody);
+      const opsStr = opsEl ? opsEl.value.trim() : '';
+      b.operands = opsStr ? safeParseJson(opsStr, []) : undefined;
+      break;
+    }
+
+    case 'for': {
+      const listEl = el('[data-k="list"]', editorBody);
+      b.list = listEl ? listEl.value : undefined;
+
+      const parseEl = el('[data-k="parse"]', editorBody);
+      b.parse = parseEl ? (parseEl.value || undefined) : undefined;
+
+      const regexEl = el('[data-k="regex_pattern"]', editorBody);
+      b.regex_pattern = regexEl ? (regexEl.value || undefined) : undefined;
+
+      const varEl = el('[data-k="var"]', editorBody);
+      b.var = varEl ? (varEl.value.trim() || undefined) : undefined;
+
+      const dropEl = el('[data-k="drop_empty"]', editorBody);
+      if (dropEl) {
+        const dropSel = dropEl.value;
+        if (dropSel === '') {
+          b.drop_empty = undefined;
+        } else {
+          b.drop_empty = (dropSel === 'true');
+        }
+      }
+
+      const whereEl = el('[data-k="where"]', editorBody);
+      const whereStr = whereEl ? whereEl.value.trim() : '';
+      b.where = whereStr ? safeParseJson(whereStr, null) : undefined;
+
+      const mapEl = el('[data-k="map"]', editorBody);
+      b.map = mapEl ? mapEl.value : undefined;
+      break;
+    }
+
+    case 'set': {
+      const varEl = el('[data-k="var"]', editorBody);
+      b.var = varEl ? varEl.value.trim() : undefined;
+
+      const valueEl = el('[data-k="value"]', editorBody);
+      if (valueEl) {
+        const valStr = valueEl.value.trim();
+        // JSONとしてパースを試みる
+        const parsed = safeParseJson(valStr, null);
+        b.value = parsed !== null ? parsed : valStr;
+      }
+      break;
+    }
+
+    case 'let': {
+      const bindingsEl = el('[data-k="bindings"]', editorBody);
+      const bindingsStr = bindingsEl ? bindingsEl.value.trim() : '';
+      b.bindings = bindingsStr ? safeParseJson(bindingsStr, {}) : undefined;
+
+      const bodyEl = el('[data-k="body"]', editorBody);
+      const bodyStr = bodyEl ? bodyEl.value.trim() : '';
+      b.body = bodyStr ? safeParseJson(bodyStr, {}) : undefined;
+      break;
+    }
+
+    case 'reduce': {
+      const listEl = el('[data-k="list"]', editorBody);
+      b.list = listEl ? listEl.value : undefined;
+
+      const valueEl = el('[data-k="value"]', editorBody);
+      if (valueEl) {
+        const valStr = valueEl.value.trim();
+        const parsed = safeParseJson(valStr, null);
+        b.value = parsed !== null ? parsed : toMaybeNumber(valStr);
+      }
+
+      const varEl = el('[data-k="var"]', editorBody);
+      b.var = varEl ? (varEl.value.trim() || undefined) : undefined;
+
+      const accEl = el('[data-k="accumulator"]', editorBody);
+      b.accumulator = accEl ? (accEl.value.trim() || undefined) : undefined;
+
+      const bodyEl = el('[data-k="body"]', editorBody);
+      const bodyStr = bodyEl ? bodyEl.value.trim() : '';
+      b.body = bodyStr ? safeParseJson(bodyStr, {}) : undefined;
+      break;
+    }
+
+    case 'while': {
+      const initEl = el('[data-k="init"]', editorBody);
+      const initStr = initEl ? initEl.value.trim() : '';
+      b.init = initStr ? safeParseJson(initStr, {}) : undefined;
+
+      const condEl = el('[data-k="cond"]', editorBody);
+      const condStr = condEl ? condEl.value.trim() : '';
+      b.cond = condStr ? safeParseJson(condStr, {}) : undefined;
+
+      const stepEl = el('[data-k="step"]', editorBody);
+      const stepStr = stepEl ? stepEl.value.trim() : '';
+      b.step = stepStr ? safeParseJson(stepStr, {}) : undefined;
+
+      const budgetEl = el('[data-k="budget"]', editorBody);
+      const budgetStr = budgetEl ? budgetEl.value.trim() : '';
+      b.budget = budgetStr ? safeParseJson(budgetStr, {}) : undefined;
+      break;
+    }
+
+    case 'call': {
+      const funcEl = el('[data-k="function"]', editorBody);
+      b.function = funcEl ? funcEl.value.trim() : undefined;
+
+      const withEl = el('[data-k="with"]', editorBody);
+      const withStr = withEl ? withEl.value.trim() : '';
+      b.with = withStr ? safeParseJson(withStr, {}) : undefined;
+
+      const returnsEl = el('[data-k="returns"]', editorBody);
+      if (returnsEl) {
+        b.returns = returnsEl.value.split(',').map(s => s.trim()).filter(Boolean);
+        if (b.returns.length === 0) b.returns = undefined;
+      }
+      break;
+    }
+
+    case 'emit': {
+      const valueEl = el('[data-k="value"]', editorBody);
+      if (valueEl) {
+        const valStr = valueEl.value.trim();
+        const parsed = safeParseJson(valStr, null);
+        b.value = parsed !== null ? parsed : valStr;
+      }
+      break;
+    }
+
+    case 'recurse': {
+      const funcEl = el('[data-k="function"]', editorBody);
+      if (funcEl) {
+        const funcStr = funcEl.value.trim();
+        b.function = funcStr ? safeParseJson(funcStr, {}) : undefined;
+      }
+
+      const withEl = el('[data-k="with"]', editorBody);
+      const withStr = withEl ? withEl.value.trim() : '';
+      b.with = withStr ? safeParseJson(withStr, {}) : undefined;
+
+      const budgetEl = el('[data-k="budget"]', editorBody);
+      const budgetStr = budgetEl ? budgetEl.value.trim() : '';
+      b.budget = budgetStr ? safeParseJson(budgetStr, {}) : undefined;
+      break;
+    }
   }
-  const whereStr = el('[data-k="where"]', editorBody).value.trim();
-  b.where = whereStr ? safeParseJson(whereStr, null) : undefined;
-  b.map = el('[data-k="map"]', editorBody).value;
 
   // outputs
   const rows = els('#logicOutputs .row', editorBody);

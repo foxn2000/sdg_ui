@@ -563,20 +563,57 @@ details.ghost-d[open]>.popover {
   margin-top: 8px
 }
 
-/* Library */
+/* Library Container */
+.library-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* Library Category */
+.lib-category {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lib-category-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 6px;
+  border-left: 3px solid #d3d6db;
+}
+
+.lib-category-items {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+/* 2アイテムの場合はセンタリング */
+.lib-category-items:has(.lib-item:nth-child(2):last-child) {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 50%;
+}
+
+/* Library（旧スタイルとの互換性） */
 .library {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
 }
 
 .lib-item {
   background: #ffffff;
   border: 1px solid #e6e8eb;
-  border-radius: 12px;
+  border-radius: 10px;
   text-align: center;
-  padding: 12px;
+  padding: 8px 4px;
   cursor: grab;
   transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
   box-shadow: var(--shadow);
@@ -594,13 +631,14 @@ details.ghost-d[open]>.popover {
 }
 
 .lib-icon {
-  font-size: 18px;
-  margin-bottom: 6px
+  font-size: 16px;
+  margin-bottom: 4px
 }
 
 .lib-name {
-  font-weight: 800;
-  letter-spacing: .3px
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .2px
 }
 
 /* Export & Import */
@@ -1046,17 +1084,104 @@ select:focus-visible {
   overflow: auto;
 }
 
-/* ライブラリ項目の密度最適化 */
-#libraryPanel .library {
-  padding-top: 8px;
+/* ライブラリ項目の密度最適化（多数のロジックブロック対応） */
+#libraryPanel .library,
+#libraryPanel .library-container {
+  padding-top: 6px;
+}
+
+#libraryPanel .lib-category-items {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+/* カテゴリ別の色分け */
+.lib-category:nth-child(1) .lib-category-label {
+  border-left-color: #6b7280;
+  /* 基本 - グレー */
+}
+
+.lib-category:nth-child(2) .lib-category-label {
+  border-left-color: #3b82f6;
+  /* 処理 - ブルー */
+}
+
+.lib-category:nth-child(3) .lib-category-label {
+  border-left-color: #6366f1;
+  /* 条件分岐 - インディゴ */
+}
+
+.lib-category:nth-child(4) .lib-category-label {
+  border-left-color: #10b981;
+  /* ループ - グリーン */
+}
+
+.lib-category:nth-child(5) .lib-category-label {
+  border-left-color: #f59e0b;
+  /* 変数 - オレンジ */
+}
+
+.lib-category:nth-child(6) .lib-category-label {
+  border-left-color: #ef4444;
+  /* 関数 - レッド */
 }
 
 .lib-item {
-  padding: 14px 12px;
+  padding: 10px 6px;
 }
 
 .lib-item .lib-name {
-  font-size: 12px;
+  font-size: 10px;
+}
+
+/* ロジック系ブロックのアイコンカラー */
+.lib-item[data-type="if"] .lib-icon,
+.lib-item[data-type="and"] .lib-icon,
+.lib-item[data-type="or"] .lib-icon,
+.lib-item[data-type="not"] .lib-icon {
+  color: #6366f1;
+}
+
+.lib-item[data-type="for"] .lib-icon,
+.lib-item[data-type="while"] .lib-icon,
+.lib-item[data-type="reduce"] .lib-icon {
+  color: #10b981;
+}
+
+.lib-item[data-type="set"] .lib-icon,
+.lib-item[data-type="let"] .lib-icon {
+  color: #f59e0b;
+}
+
+.lib-item[data-type="call"] .lib-icon,
+.lib-item[data-type="emit"] .lib-icon,
+.lib-item[data-type="recurse"] .lib-icon {
+  color: #ef4444;
+}
+
+/* ロジックブロックのノードヘッダー色分け */
+.node[data-op="if"] .node-type,
+.node[data-op="and"] .node-type,
+.node[data-op="or"] .node-type,
+.node[data-op="not"] .node-type {
+  color: #6366f1;
+}
+
+.node[data-op="for"] .node-type,
+.node[data-op="while"] .node-type,
+.node[data-op="reduce"] .node-type {
+  color: #10b981;
+}
+
+.node[data-op="set"] .node-type,
+.node[data-op="let"] .node-type {
+  color: #f59e0b;
+}
+
+.node[data-op="call"] .node-type,
+.node[data-op="emit"] .node-type,
+.node[data-op="recurse"] .node-type {
+  color: #ef4444;
 }
 
 /* YAMLエリア：操作ボタンを固定、プレビューの開閉トリガの可読性強化 */
@@ -1159,6 +1284,40 @@ select:focus-visible {
 /* END アイコン（フラグ） */
 .icon-end svg {
   stroke-width: 1.8;
+}
+
+/* ロジック系アイコン */
+.icon-if svg,
+.icon-and svg,
+.icon-or svg,
+.icon-not svg,
+.icon-for svg,
+.icon-set svg,
+.icon-let svg,
+.icon-reduce svg,
+.icon-while svg,
+.icon-call svg,
+.icon-emit svg,
+.icon-recurse svg {
+  stroke-width: 2;
+}
+
+/* テキストベースのアイコンはfillとstroke両方 */
+.icon-and svg text,
+.icon-or svg text,
+.icon-not svg text,
+.icon-set svg text,
+.icon-let svg text,
+.icon-call svg text {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* パスベースのアイコン */
+.icon-while svg,
+.icon-recurse svg {
+  fill: currentColor;
+  stroke: none;
 }
 
 /* 設定アイコン */

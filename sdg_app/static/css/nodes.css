@@ -1,0 +1,143 @@
+/* =========================================================
+   MABEL Studio — Nodes & Wires
+   ========================================================= */
+
+/* 配線レイヤ: クリッピングさせない */
+.wires {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  overflow: visible;
+  /* 重要: ビューポート外へはみ出す線のクリッピングを解除 */
+}
+
+.wires path {
+  fill: none;
+  stroke-width: 2.5;
+  marker-end: url(#arrow);
+  opacity: var(--edge-opacity);
+  vector-effect: non-scaling-stroke;
+  /* ズームしても線幅を一定に */
+}
+
+/* Nodes */
+.nodes {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.node {
+  position: absolute;
+  min-width: 232px;
+  max-width: 362px;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--node-top), var(--node));
+  border: 1px solid #e9edf2;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), var(--inner-glow);
+  -webkit-user-select: none;
+  user-select: none;
+  transition: box-shadow .08s ease, transform .08s ease;
+  backdrop-filter: blur(6px) saturate(1.02);
+  -webkit-backdrop-filter: blur(6px) saturate(1.02);
+}
+
+.node::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 0;
+  height: 18px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, .0));
+  pointer-events: none;
+}
+
+.node.selected {
+  box-shadow: 0 0 0 2px rgba(34, 36, 38, .45), var(--shadow);
+  transform: translateZ(0)
+}
+
+.node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eef1f4
+}
+
+.node-header[data-drag] {
+  cursor: move;
+}
+
+.node-type {
+  font-weight: 800;
+  letter-spacing: .5px;
+  font-size: 12px
+}
+
+.node-title {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+.node-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center
+}
+
+.node-body {
+  padding: 10px;
+  font-size: 12.5px;
+  line-height: 1.35
+}
+
+.node-io {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap
+}
+
+.io-pill {
+  padding: 4px 7px;
+  border-radius: 8px;
+  border: 1px dashed rgba(17, 18, 19, .15);
+  color: #2b2f33;
+  background: #ffffff;
+  font-family: var(--mono);
+  font-size: 11.5px
+}
+
+/* ロジックブロックのノードヘッダー色分け */
+.node[data-op="if"] .node-type,
+.node[data-op="and"] .node-type,
+.node[data-op="or"] .node-type,
+.node[data-op="not"] .node-type {
+  color: #6366f1;
+}
+
+.node[data-op="for"] .node-type,
+.node[data-op="while"] .node-type,
+.node[data-op="reduce"] .node-type {
+  color: #10b981;
+}
+
+.node[data-op="set"] .node-type,
+.node[data-op="let"] .node-type {
+  color: #f59e0b;
+}
+
+.node[data-op="call"] .node-type,
+.node[data-op="emit"] .node-type,
+.node[data-op="recurse"] .node-type {
+  color: #ef4444;
+}

@@ -1,0 +1,44 @@
+/* =========================================================
+   MABEL Studio — CSS Variables & Design Tokens
+   ========================================================= */
+
+/* デザイントークン（落ち着いたモノトーン + 低彩度のみ） */
+:root {
+  /* Base palette */
+  --bg: #f6f7f8;
+  /* 全体背景はフラットな明度差のみ */
+  --panel: rgba(255, 255, 255, .94);
+  --panel-alt: rgba(255, 255, 255, .98);
+  --grid: #e9ecef;
+  --grid-strong: #e3e6ea;
+
+  --text: #111213;
+  --muted: #6b7280;
+
+  /* アクセントは深いグレー（強い主張を避ける） */
+  --acc: #222426;
+  --acc-blue: #222426;
+  /* 既存変数互換（不要色はモノトーンへ） */
+  --acc-lime: #222426;
+  /* 既存変数互換 */
+
+  /* 配線カラーは落ち着いたグレー */
+  --line-start: #a3a7ad;
+  --line-end: #a3a7ad;
+
+  --node: #ffffff;
+  --node-top: #ffffff;
+
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, .06), 0 1px 2px rgba(0, 0, 0, .06);
+  --inner-glow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 -1px 0 rgba(0, 0, 0, .04);
+
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+
+  --edge-opacity: .95;
+  --focus: #222426;
+
+  /* Help の可読性用 */
+  --panel-opaque: #ffffff;
+}

@@ -1,0 +1,386 @@
+/* =========================================================
+   MABEL Studio — UI Components (Buttons, Forms, Modals)
+   ========================================================= */
+
+/* Buttons */
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  transition: transform .06s ease, box-shadow .12s ease, background .18s ease, color .18s ease, border-color .18s ease;
+  will-change: transform;
+}
+
+button.primary {
+  color: var(--text);
+  background: #ffffff;
+  border: 1px solid #e6e8eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .06), 0 1px 0 rgba(255, 255, 255, .9) inset;
+}
+
+button.primary:hover {
+  transform: translateY(-1px);
+  background: #f7f7f7
+}
+
+button.accent {
+  background: linear-gradient(180deg, #2a2c2f, #212325);
+  color: #ffffff;
+  border: 1px solid #1f2123;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .18), 0 1px 0 rgba(255, 255, 255, .06) inset;
+}
+
+button.accent:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #26282b, #1c1e20)
+}
+
+button.ghost {
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #e6e8eb;
+}
+
+button:active {
+  transform: translateY(1px)
+}
+
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.del {
+  background: #ffffff;
+  color: var(--text);
+  border-radius: 10px;
+  border: 1px solid #eceff3;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.del .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.del:hover {
+  box-shadow: 0 0 0 3px rgba(34, 36, 38, .12) inset, var(--shadow);
+  border-color: #e8ebef;
+}
+
+/* Badge */
+.badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  border: 1px solid #e6e8eb;
+  color: #2b2f33;
+  background: #f7f7f8;
+}
+
+/* Modal */
+.modal {
+  width: min(900px, 94vw);
+  color: var(--text);
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, .25);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px)
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eef1f4
+}
+
+.modal-body {
+  padding: 12px;
+  max-height: 62vh;
+  overflow: auto
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #eef1f4
+}
+
+/* モーダルの × はノード削除ボタンと同意匠 */
+.icon-close {
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #eceff3;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-close:hover {
+  box-shadow: 0 0 0 3px rgba(34, 36, 38, .12) inset, var(--shadow);
+  border-color: #e8ebef;
+}
+
+/* Form Elements */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-grid label {
+  font-size: 12px;
+  color: var(--muted)
+}
+
+.form-grid input,
+.form-grid textarea,
+.form-grid select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e6e8eb;
+  background: #ffffff;
+  color: var(--text);
+  font-family: var(--mono)
+}
+
+.form-grid .full {
+  grid-column: 1 / -1
+}
+
+/* ---- Modal form: 読みやすさ向上（機能不変） ---- */
+.modal .form-grid {
+  grid-template-columns: 140px 1fr;
+  column-gap: 12px;
+  row-gap: 10px;
+}
+
+.modal .form-grid label {
+  align-self: center;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  margin: 12px 0 2px;
+  letter-spacing: .2px;
+  text-transform: uppercase
+}
+
+.section-title.full {
+  grid-column: 1 / -1;
+}
+
+/* details（折りたたみ）をカード調に */
+.modal .form-grid details {
+  border: 1px dashed #d7dce3;
+  border-radius: 12px;
+  padding: 6px 8px;
+  background: #ffffff
+}
+
+.modal .form-grid details>summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 6px;
+  margin: -6px -6px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #2b2f33;
+  background: linear-gradient(180deg, #fafbfc, #f7f8f9);
+  border: 1px solid #e6e8eb;
+}
+
+.modal .form-grid details>summary::after {
+  content: '▾';
+  float: right;
+  color: var(--muted)
+}
+
+.modal .form-grid details[open]>summary {
+  background: #ffffff
+}
+
+/* 出力リストの列ヘッダ（視認性向上） */
+.inline-list .hdr {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px 1fr 36px;
+  gap: 6px;
+  margin: 6px 0 2px;
+  font-size: 11px;
+  color: var(--muted)
+}
+
+.inline-list .hdr.sub {
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+
+/* 行の読みやすさ（交互色 + 内側余白） */
+.inline-list .row {
+  background: #fff;
+  padding: 6px;
+  border-radius: 8px
+}
+
+.inline-list .row:nth-of-type(odd) {
+  background: #fafbfc
+}
+
+.inline-list input::placeholder,
+.inline-list select {
+  color: #7a818c
+}
+
+/* テキストエリアの可読性 */
+.modal .form-grid textarea {
+  line-height: 1.4;
+  resize: vertical
+}
+
+/* 狭幅時は1カラムにフォールバック */
+@media (max-width: 860px) {
+  .modal .form-grid {
+    grid-template-columns: 1fr
+  }
+
+  .section-title {
+    margin-top: 6px
+  }
+}
+
+fieldset.inline-list {
+  border: 1px dashed #d7dce3;
+  border-radius: 12px;
+  padding: 8px;
+  margin: 6px 0;
+  background: #ffffff;
+}
+
+.inline-list .row {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px 1fr 36px;
+  gap: 6px;
+  margin: 6px 0
+}
+
+.inline-list .row.logic {
+  grid-template-columns: 1fr 120px 120px 1fr 36px
+}
+
+.inline-list .row.python {
+  grid-template-columns: 1fr 1fr 36px
+}
+
+.inline-list .row label {
+  display: none
+}
+
+.inline-list input,
+.inline-list select {
+  width: 100%
+}
+
+/* YAML Preview/Import */
+.preview-d>summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #2b2f33;
+  background: linear-gradient(180deg, #fafbfc, #f7f8f9);
+  border: 1px solid #e6e8eb;
+}
+
+.preview-d[open]>summary {
+  background: #ffffff
+}
+
+.preview-d>summary::after {
+  content: '▾';
+  float: right;
+  color: var(--muted)
+}
+
+.import-drop {
+  border: 1px dashed #d7dce3;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  color: var(--muted);
+  background: #ffffff;
+}
+
+.import-drop.drag {
+  border-color: var(--focus);
+  color: var(--text);
+  box-shadow: inset 0 0 0 2px rgba(34, 36, 38, .18)
+}
+
+.import-drop {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 12px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.import-drop:hover {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.import-drop.drag {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+#yamlPreview {
+  width: 100%;
+  height: 60vh;
+  min-height: 320px;
+  font-family: var(--mono);
+  font-size: 12px;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #e6e8eb;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.modal #yamlPreview {
+  height: 60vh;
+  min-height: 320px
+}
+
+@media (max-height: 860px) {
+  .modal #yamlPreview {
+    height: 50vh;
+    min-height: 240px
+  }
+}

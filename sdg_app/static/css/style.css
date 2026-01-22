@@ -980,12 +980,18 @@ select:focus-visible {
 .sidebar {
   gap: 20px;
   padding: 12px 12px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
+.sidebar>.panel {
+  flex-shrink: 0;
+}
+
+/* 各パネルのヘッダーをサイドバー内で固定（スクロール時に見出しを保持） */
 .panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   border-radius: var(--radius);
 }
 
@@ -1075,19 +1081,32 @@ select:focus-visible {
 #modelsPanel {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
+}
+
+#modelsPanel .panel-tools,
+#modelsPanel .panel-note {
+  flex-shrink: 0;
 }
 
 #modelsPanel .models-list {
-  flex: 1 1 auto;
-  min-height: 140px;
-  max-height: 50vh;
+  flex: 1 1 0;
+  min-height: 0;
   overflow: auto;
 }
 
 /* ライブラリ項目の密度最適化（多数のロジックブロック対応） */
+#libraryPanel {
+  display: flex;
+  flex-direction: column;
+}
+
 #libraryPanel .library,
 #libraryPanel .library-container {
   padding-top: 6px;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 #libraryPanel .lib-category-items {
@@ -1188,6 +1207,7 @@ select:focus-visible {
 .export {
   padding: 0 12px 12px;
   border-top: 1px solid #eef1f4;
+  flex-shrink: 0;
 }
 
 .export-controls {
@@ -1337,4 +1357,524 @@ button .icon {
 
 button .icon:only-child {
   margin-right: 0;
+}
+
+/* =========================================================
+   サイドバーUI改善 (Enhanced Right Sidebar UX)
+   ========================================================= */
+
+/* サイドバー全体：より洗練された背景とスペース */
+.sidebar {
+  background: linear-gradient(180deg, #f8f9fa 0%, #f4f5f7 100%);
+  border-left: 1px solid #e4e7ec;
+  gap: 16px;
+}
+
+/* パネル共通スタイル強化 */
+.sidebar>.panel {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e8ebf0;
+  background: #ffffff;
+}
+
+.sidebar>.panel::before {
+  display: none;
+  /* glassのハイライトを無効化 */
+}
+
+/* パネルヘッダー強化 */
+.sidebar .panel-head {
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border-bottom: 1px solid #e8ebf0;
+  padding: 14px 16px;
+  border-radius: 0;
+}
+
+.sidebar .panel-head h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1d21;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar .panel-head h2::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+/* ===== AIモデル設定パネル強化 ===== */
+#modelsPanel {
+  flex: 0 0 auto;
+  max-height: 45%;
+}
+
+#modelsPanel .panel-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+#modelsPanel .panel-head h2 {
+  grid-column: 1;
+}
+
+#modelsPanel .panel-head #btnAddModel {
+  grid-column: 2;
+  padding: 8px 16px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+  transition: all 0.15s ease;
+}
+
+#modelsPanel .panel-head #btnAddModel:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.35);
+}
+
+/* ツールバー改善 */
+.panel-tools {
+  background: #f8f9fa;
+  border-bottom: 1px solid #eef0f4;
+  padding: 12px 16px;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.panel-tools button {
+  flex: 1 1 calc(50% - 4px);
+  min-width: 0;
+  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.12s ease;
+}
+
+.panel-tools button.ghost {
+  background: #ffffff;
+  border: 1px solid #e2e6eb;
+  color: #4b5563;
+}
+
+.panel-tools button.ghost:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.panel-tools button.primary {
+  flex: 1 1 100%;
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(17, 24, 39, 0.2);
+}
+
+.panel-tools button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(17, 24, 39, 0.3);
+}
+
+.panel-tools button.danger {
+  border-color: #fecaca;
+  color: #dc2626;
+  background: #fff5f5;
+}
+
+.panel-tools button.danger:hover {
+  background: #fee2e2;
+  border-color: #fdcece;
+}
+
+/* パネル注釈 */
+.panel-note {
+  background: #f8f9fb;
+  margin: 0;
+  padding: 10px 16px;
+  border-left: none;
+  border-bottom: 1px solid #eef0f4;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* モデルリスト改善 */
+.models-list {
+  padding: 12px;
+  background: #fafbfc;
+}
+
+.models-list details {
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid #e5e8ed;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.models-list details:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.models-list details>summary {
+  padding: 12px 14px;
+  border-radius: 0;
+  border: none;
+  background: #ffffff;
+  transition: background 0.12s ease;
+}
+
+.models-list details>summary:hover {
+  background: #f9fafb;
+}
+
+.models-list details[open] {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.models-list details[open]>summary {
+  border-bottom: 1px solid #e5e8ed;
+  background: #f8fafc;
+}
+
+.model-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.model-id {
+  font-size: 11px;
+  color: #9ca3af;
+  font-family: var(--mono);
+}
+
+/* ===== ブロック配置パネル強化 ===== */
+#libraryPanel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#libraryPanel .panel-head h2::before {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+/* ライブラリコンテナ強化 */
+.library-container {
+  padding: 12px;
+  gap: 12px;
+  background: #fafbfc;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* カテゴリスタイル強化 */
+.lib-category {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e8ebf0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  gap: 8px;
+}
+
+.lib-category-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  border-left: 3px solid;
+  color: #374151;
+  text-transform: uppercase;
+}
+
+/* カテゴリ別カラーテーマ強化 */
+.lib-category:nth-child(1) .lib-category-label {
+  border-left-color: #6b7280;
+  background: #f9fafb;
+}
+
+.lib-category:nth-child(2) .lib-category-label {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.lib-category:nth-child(3) .lib-category-label {
+  border-left-color: #8b5cf6;
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.lib-category:nth-child(4) .lib-category-label {
+  border-left-color: #10b981;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.lib-category:nth-child(5) .lib-category-label {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.lib-category:nth-child(6) .lib-category-label {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* ライブラリアイテムグリッド */
+.lib-category-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ライブラリアイテム強化 */
+.lib-item {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: grab;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.lib-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.lib-item:hover {
+  transform: translateY(-2px);
+  border-color: #d1d5db;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.lib-item:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.lib-item:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #3b82f6;
+}
+
+/* データタイプ別のホバー色 */
+.lib-item[data-type="start"]:hover,
+.lib-item[data-type="end"]:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.lib-item[data-type="ai"]:hover,
+.lib-item[data-type="python"]:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.lib-item[data-type="if"]:hover,
+.lib-item[data-type="and"]:hover,
+.lib-item[data-type="or"]:hover,
+.lib-item[data-type="not"]:hover {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+}
+
+.lib-item[data-type="for"]:hover,
+.lib-item[data-type="while"]:hover,
+.lib-item[data-type="reduce"]:hover {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.lib-item[data-type="set"]:hover,
+.lib-item[data-type="let"]:hover {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.lib-item[data-type="call"]:hover,
+.lib-item[data-type="emit"]:hover,
+.lib-item[data-type="recurse"]:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+/* ライブラリアイコン強化 */
+.lib-icon {
+  margin-bottom: 6px;
+}
+
+.lib-icon .icon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.15s ease;
+}
+
+.lib-item:hover .lib-icon .icon {
+  transform: scale(1.1);
+}
+
+/* ライブラリ名強化 */
+.lib-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #374151;
+  text-transform: uppercase;
+}
+
+/* ===== YAML エクスポートエリア強化 ===== */
+.export {
+  background: #ffffff;
+  border-top: 1px solid #e8ebf0;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.export-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  margin-bottom: 12px;
+}
+
+.export-controls button {
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.12s ease;
+}
+
+.export-controls #btnGenerate {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+}
+
+.export-controls #btnGenerate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+}
+
+.export-controls #btnPreview,
+.export-controls #btnImport {
+  background: #ffffff;
+  border: 1px solid #e2e6eb;
+  color: #4b5563;
+}
+
+.export-controls #btnPreview:hover,
+.export-controls #btnImport:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* ドロップゾーン強化 */
+.import-drop {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 12px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.import-drop:hover {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.import-drop.drag {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* ===== レスポンシブ調整 ===== */
+@media (max-width: 480px) {
+  .lib-category-items {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .export-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== スクロールバー改善（サイドバー専用） ===== */
+.sidebar::-webkit-scrollbar,
+.library-container::-webkit-scrollbar,
+.models-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.library-container::-webkit-scrollbar-thumb,
+.models-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.library-container::-webkit-scrollbar-thumb:hover,
+.models-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.library-container::-webkit-scrollbar-track,
+.models-list::-webkit-scrollbar-track {
+  background: transparent;
 }

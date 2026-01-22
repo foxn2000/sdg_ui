@@ -1,0 +1,114 @@
+/* =========================================================
+   MABEL Studio — SVG Icons & Utilities
+   ========================================================= */
+
+/* アイコンの基本スタイル */
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+.icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ライブラリアイコン（大きめ） */
+.lib-icon .icon {
+    width: 20px;
+    height: 20px;
+    width: 24px;
+    height: 24px;
+    transition: transform 0.15s ease;
+}
+
+.lib-icon .icon svg {
+    stroke-width: 1.8;
+}
+
+.lib-item:hover .lib-icon .icon {
+    transform: scale(1.1);
+}
+
+/* START アイコン（再生マーク） */
+.icon-start svg {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* AI アイコン（CPU/チップ） */
+.icon-ai svg {
+    stroke-width: 1.6;
+}
+
+/* END アイコン（フラグ） */
+.icon-end svg {
+    stroke-width: 1.8;
+}
+
+/* CODE アイコン */
+.icon-code svg {
+    stroke-width: 2;
+}
+
+/* ロジック系アイコン */
+.icon-if svg,
+.icon-and svg,
+.icon-or svg,
+.icon-not svg,
+.icon-for svg,
+.icon-set svg,
+.icon-let svg,
+.icon-reduce svg,
+.icon-while svg,
+.icon-call svg,
+.icon-emit svg,
+.icon-recurse svg {
+    stroke-width: 2;
+}
+
+/* テキストベースのアイコンはfillとstroke両方 */
+.icon-and svg text,
+.icon-or svg text,
+.icon-not svg text,
+.icon-set svg text,
+.icon-let svg text,
+.icon-call svg text {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* パスベースのアイコン */
+.icon-while svg,
+.icon-recurse svg {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* 設定アイコン */
+.icon-settings svg {
+    stroke-width: 1.8;
+}
+
+/* 閉じる（×）アイコン */
+.icon-x svg {
+    stroke-width: 2.2;
+}
+
+/* ボタン内のアイコン調整 */
+button .icon {
+    margin-right: 4px;
+}
+
+button .icon:only-child {
+    margin-right: 0;
+}

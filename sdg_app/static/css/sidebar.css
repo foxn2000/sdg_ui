@@ -1,0 +1,752 @@
+/* =========================================================
+   MABEL Studio — Sidebar & Panels
+   ========================================================= */
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px;
+    overflow: auto;
+    border-left: 1px solid #eceff3;
+    background: linear-gradient(180deg, #f8f9fa 0%, #f4f5f7 100%);
+    border-left: 1px solid #e4e7ec;
+    gap: 16px;
+}
+
+.sidebar>.panel {
+    flex-shrink: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 4px 16px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e8ebf0;
+    background: #ffffff;
+}
+
+.sidebar>.panel::before {
+    display: none;
+    /* glassのハイライトを無効化 */
+}
+
+/* Panel Components */
+.panel {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius);
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef1f4;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--panel-alt);
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .04);
+}
+
+.sidebar .panel-head {
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    border-bottom: 1px solid #e8ebf0;
+    padding: 14px 16px;
+    border-radius: 0;
+}
+
+.panel-head h2 {
+    font-size: 14px;
+    margin: 0
+}
+
+.sidebar .panel-head h2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1d21;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar .panel-head h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 14px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.panel-head.clickable {
+    cursor: pointer;
+}
+
+/* Panel Tools */
+.panel-tools {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--panel-alt);
+    border-bottom: 1px solid #eef1f4;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eef0f4;
+    padding: 12px 16px;
+    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.panel-tools button {
+    width: 100%;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.12s ease;
+}
+
+.panel-tools .primary {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .08), 0 1px 0 rgba(255, 255, 255, .9) inset;
+    flex: 1 1 100%;
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(17, 24, 39, 0.2);
+}
+
+.panel-tools .primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(17, 24, 39, 0.3);
+}
+
+.panel-tools .ghost {
+    background: #ffffff;
+    border: 1px solid #e2e6eb;
+    color: #4b5563;
+}
+
+.panel-tools .ghost:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.panel-tools .wide {
+    grid-column: 1 / -1;
+}
+
+.panel-tools .danger {
+    border-color: #e3c9c9;
+    box-shadow: 0 0 0 2px rgba(227, 201, 201, .22) inset;
+    border-color: #fecaca;
+    color: #dc2626;
+    background: #fff5f5;
+}
+
+.panel-tools .danger:hover {
+    box-shadow: 0 0 0 3px rgba(227, 201, 201, .3) inset, var(--shadow);
+    background: #fee2e2;
+    border-color: #fdcece;
+}
+
+.panel-tools+.models-list {
+    margin-top: 6px;
+}
+
+.panel-tools+.panel-note {
+    margin-top: 6px;
+}
+
+@media (max-width: 680px) {
+    .panel-tools {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Panel Note */
+.panel-note {
+    margin: 6px 12px 0;
+    padding-left: 10px;
+    border-left: 3px solid #eceff3;
+    background: #f8f9fb;
+    margin: 0;
+    padding: 10px 16px;
+    border-left: none;
+    border-bottom: 1px solid #eef0f4;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.panel-note+.models-list {
+    margin-top: 8px;
+}
+
+/* ===== AIモデル設定パネル ===== */
+#modelsPanel {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    max-height: 45%;
+}
+
+#modelsPanel .panel-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+}
+
+#modelsPanel .panel-head h2 {
+    grid-column: 1;
+}
+
+#modelsPanel .panel-head #btnAddModel {
+    grid-column: 2;
+    padding: 8px 16px;
+    font-size: 12px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+    transition: all 0.15s ease;
+}
+
+#modelsPanel .panel-head #btnAddModel:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.35);
+}
+
+#modelsPanel .panel-tools,
+#modelsPanel .panel-note {
+    flex-shrink: 0;
+}
+
+#modelsPanel .models-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+}
+
+#libraryPanel .panel-head {
+    position: sticky;
+    top: 0;
+}
+
+/* Models List */
+.models-list {
+    padding: 6px 8px;
+    padding: 12px;
+    background: #fafbfc;
+}
+
+.models-list details {
+    border-top: 1px solid #eef1f4;
+    padding: 10px 12px;
+    margin: 8px 0;
+    border-radius: 12px;
+    border: 1px solid #e5e8ed;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    transition: all 0.15s ease;
+}
+
+.models-list details:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.models-list details[open] {
+    background: var(--panel-alt);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.models-list summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 0;
+    border: none;
+    background: #ffffff;
+    transition: background 0.12s ease;
+}
+
+.models-list summary:hover {
+    background: #f9fafb;
+}
+
+.models-list details[open]>summary {
+    border-bottom: 1px solid #e5e8ed;
+    background: #f8fafc;
+}
+
+.model-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.model-title {
+    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.model-id {
+    color: var(--muted);
+    font-size: 12px;
+    font-size: 11px;
+    color: #9ca3af;
+    font-family: var(--mono);
+}
+
+.model-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.model-grid label {
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.model-grid input,
+.model-grid textarea,
+.model-grid select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #e6e8eb;
+    background: #ffffff;
+    color: var(--text);
+    font-family: var(--mono)
+}
+
+.model-grid details {
+    border: 1px dashed #d7dce3;
+    border-radius: 12px;
+    padding: 8px 8px;
+    background: #ffffff
+}
+
+.model-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px
+}
+
+.model-delete-btn {
+    flex-shrink: 0;
+    background: #ffffff;
+    color: var(--text);
+    border: 1px solid #eceff3;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    transition: all .12s ease;
+}
+
+.model-delete-btn:hover {
+    background: #fff5f5;
+    border-color: #fecaca;
+    color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .1) inset;
+}
+
+/* ===== ブロック配置パネル ===== */
+#libraryPanel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#libraryPanel .panel-head h2::before {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+#libraryPanel .library,
+#libraryPanel .library-container {
+    padding-top: 6px;
+    overflow: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Library Container */
+.library-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    padding: 12px;
+    gap: 12px;
+    background: #fafbfc;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Library Category */
+.lib-category {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #e8ebf0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    gap: 8px;
+}
+
+.lib-category-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 6px;
+    border-left: 3px solid #d3d6db;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #f3f4f6;
+    border-left: 3px solid;
+    color: #374151;
+    text-transform: uppercase;
+}
+
+.lib-category-items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* 2アイテムの場合はセンタリング */
+.lib-category-items:has(.lib-item:nth-child(2):last-child) {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 50%;
+}
+
+/* カテゴリ別カラーテーマ */
+.lib-category:nth-child(1) .lib-category-label {
+    border-left-color: #6b7280;
+    background: #f9fafb;
+}
+
+.lib-category:nth-child(2) .lib-category-label {
+    border-left-color: #3b82f6;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.lib-category:nth-child(3) .lib-category-label {
+    border-left-color: #8b5cf6;
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+
+.lib-category:nth-child(4) .lib-category-label {
+    border-left-color: #10b981;
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.lib-category:nth-child(5) .lib-category-label {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.lib-category:nth-child(6) .lib-category-label {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+/* Library（旧スタイルとの互換性） */
+.library {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 8px;
+}
+
+/* Library Item */
+.lib-item {
+    background: #ffffff;
+    border: 1px solid #e6e8eb;
+    border-radius: 10px;
+    text-align: center;
+    padding: 8px 4px;
+    cursor: grab;
+    transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+    box-shadow: var(--shadow);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: grab;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+.lib-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 50%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.lib-item:focus,
+.lib-item:hover {
+    box-shadow: 0 0 0 3px rgba(34, 36, 38, .14) inset, var(--shadow);
+    border-color: #e3e6ea;
+    transform: translateY(-2px);
+    border-color: #d1d5db;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.lib-item:active {
+    cursor: grabbing;
+    transform: scale(.98);
+    transform: scale(0.96);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.lib-item:focus {
+    outline: none;
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #3b82f6;
+}
+
+/* データタイプ別のホバー色 */
+.lib-item[data-type="start"]:hover,
+.lib-item[data-type="end"]:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+
+.lib-item[data-type="ai"]:hover,
+.lib-item[data-type="python"]:hover {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+.lib-item[data-type="if"]:hover,
+.lib-item[data-type="and"]:hover,
+.lib-item[data-type="or"]:hover,
+.lib-item[data-type="not"]:hover {
+    border-color: #c4b5fd;
+    background: #f5f3ff;
+}
+
+.lib-item[data-type="for"]:hover,
+.lib-item[data-type="while"]:hover,
+.lib-item[data-type="reduce"]:hover {
+    border-color: #6ee7b7;
+    background: #ecfdf5;
+}
+
+.lib-item[data-type="set"]:hover,
+.lib-item[data-type="let"]:hover {
+    border-color: #fcd34d;
+    background: #fffbeb;
+}
+
+.lib-item[data-type="call"]:hover,
+.lib-item[data-type="emit"]:hover,
+.lib-item[data-type="recurse"]:hover {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+.lib-icon {
+    font-size: 16px;
+    margin-bottom: 4px;
+    margin-bottom: 6px;
+}
+
+.lib-name {
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: .2px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #374151;
+    text-transform: uppercase;
+}
+
+/* ロジック系ブロックのアイコンカラー */
+.lib-item[data-type="if"] .lib-icon,
+.lib-item[data-type="and"] .lib-icon,
+.lib-item[data-type="or"] .lib-icon,
+.lib-item[data-type="not"] .lib-icon {
+    color: #6366f1;
+}
+
+.lib-item[data-type="for"] .lib-icon,
+.lib-item[data-type="while"] .lib-icon,
+.lib-item[data-type="reduce"] .lib-icon {
+    color: #10b981;
+}
+
+.lib-item[data-type="set"] .lib-icon,
+.lib-item[data-type="let"] .lib-icon {
+    color: #f59e0b;
+}
+
+.lib-item[data-type="call"] .lib-icon,
+.lib-item[data-type="emit"] .lib-icon,
+.lib-item[data-type="recurse"] .lib-icon {
+    color: #ef4444;
+}
+
+/* Export & Import */
+.export {
+    padding: 12px;
+    border-top: 1px solid #eef1f4;
+    background: #ffffff;
+    border-top: 1px solid #e8ebf0;
+    padding: 16px;
+    flex-shrink: 0;
+}
+
+.export-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    margin-bottom: 12px;
+}
+
+.export-controls button {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.12s ease;
+}
+
+.export-controls #btnGenerate {
+    grid-column: 1 / -1;
+    background: linear-gradient(180deg, #059669 0%, #047857 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+}
+
+.export-controls #btnGenerate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+}
+
+.export-controls #btnPreview,
+.export-controls #btnImport {
+    background: #ffffff;
+    border: 1px solid #e2e6eb;
+    color: #4b5563;
+}
+
+.export-controls #btnPreview:hover,
+.export-controls #btnImport:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+#importDrop {
+    margin-bottom: 8px;
+    margin: 8px 0
+}
+
+/* ===== レスポンシブ調整 ===== */
+@media (max-width: 480px) {
+    .lib-category-items {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .export-controls {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== スクロールバー改善（サイドバー専用） ===== */
+.sidebar::-webkit-scrollbar,
+.library-container::-webkit-scrollbar,
+.models-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.library-container::-webkit-scrollbar-thumb,
+.models-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.library-container::-webkit-scrollbar-thumb:hover,
+.models-list::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.library-container::-webkit-scrollbar-track,
+.models-list::-webkit-scrollbar-track {
+    background: transparent;
+}

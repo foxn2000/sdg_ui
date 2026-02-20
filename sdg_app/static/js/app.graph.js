@@ -9,7 +9,7 @@
 // -------------------------
 
 /** 名称を正規化（NFKC + trim + 連続空白の単一化 + 小文字化） */
-function normKey(name){
+function normKey(name) {
   return String(name ?? '')
     .normalize('NFKC')
     .replace(/\s+/g, ' ')
@@ -18,7 +18,7 @@ function normKey(name){
 }
 
 /** 端子ラベルの可読版（UI表示用に元の名称を返す） */
-function prettyName(name){
+function prettyName(name) {
   return String(name ?? '').trim();
 }
 
@@ -65,7 +65,7 @@ function drawConnections() {
     const horizontalDist = x2 - x1;
     const verticalDist = Math.abs(y2 - y1);
     const dx = Math.max(40, Math.abs(horizontalDist) * 0.35);
-    
+
     // Y座標が近い場合（横一直線に近い）は制御点を少し上にずらして線を見えるようにする
     let d;
     if (verticalDist < 10) {
@@ -73,10 +73,10 @@ function drawConnections() {
       const offset = 15; // わずかに上にずらす
       const cy1 = y1 - offset;
       const cy2 = y2 - offset;
-      d = `M ${x1} ${y1} C ${x1+dx} ${cy1}, ${x2-dx} ${cy2}, ${x2} ${y2}`;
+      d = `M ${x1} ${y1} C ${x1 + dx} ${cy1}, ${x2 - dx} ${cy2}, ${x2} ${y2}`;
     } else {
       // 通常のベジェ曲線
-      d = `M ${x1} ${y1} C ${x1+dx} ${y1}, ${x2-dx} ${y2}, ${x2} ${y2}`;
+      d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
     }
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttribute('d', d);
@@ -97,8 +97,17 @@ function drawConnections() {
   });
 }
 
-function clearWires(){
+function clearWires() {
   els('path.edge', wiresSvg).forEach(n => n.remove());
+}
+
+/**
+ * Pythonブロックの出力名リストを取得する。
+ * py_outputs（UI内部フィールド）が優先。なければ YAMLインポート後の outputs ({name:...}形式 or 文字列) を参照。
+ */
+function getPyOutputNames(b) {
+  if (b.py_outputs && b.py_outputs.length) return b.py_outputs;
+  return (b.outputs || []).map(o => typeof o === 'string' ? o : (o && o.name) ? o.name : '').filter(Boolean);
 }
 
 function computeEdges() {
@@ -107,10 +116,10 @@ function computeEdges() {
 
   // Collect outputs (producers)
   state.blocks.forEach(b => {
-    const outs = (b.type === 'start') ? (b.outputs||[])
-              : (b.type === 'ai') ? (b.outputs||[]).map(o=>o.name)
-              : (b.type === 'logic') ? (b.outputs||[]).map(o=>o.name)
-              : (b.type === 'python') ? (b.py_outputs||[]) : [];
+    const outs = (b.type === 'start') ? (b.outputs || [])
+      : (b.type === 'ai') ? (b.outputs || []).map(o => o.name)
+        : (b.type === 'logic') ? (b.outputs || []).map(o => o.name)
+          : (b.type === 'python') ? getPyOutputNames(b) : [];
     outs.forEach(n => {
       const display = (n || '').trim();
       if (!display) return;
@@ -157,7 +166,7 @@ function inferredInputs(block) {
     if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
   } else if (block.type === 'logic') {
     const op = block.op || 'if';
-    
+
     if (op === 'for') {
       scan(block.list || '');
       if (block.where) scan(JSON.stringify(block.where));
@@ -213,24 +222,25 @@ function inferredInputs(block) {
       scan(block.else || '');
       if (block.operands) scan(JSON.stringify(block.operands));
     }
-    
+
     // run_if は全ての op で処理
     if (block.run_if && typeof block.run_if === 'object') scan(JSON.stringify(block.run_if));
   } else if (block.type === 'python') {
-    // inputsは配列またはオブジェクトの可能性がある
+    // inputsは変数名を直接格納しているため、scan（{...}抽出）ではなく直接追加する
     const inputs = block.inputs || [];
     if (Array.isArray(inputs)) {
       inputs.forEach(name => {
         if (name && typeof name === 'string') {
-          // 入力値内の{...}パターンもスキャン
-          scan(name);
+          const cleaned = name.normalize('NFKC').trim().replace(/\s+/g, ' ');
+          if (cleaned) set.add(cleaned);
         }
       });
     } else if (typeof inputs === 'object') {
-      // オブジェクト形式の場合、値をスキャン
-      Object.values(inputs).forEach(value => {
-        if (value && typeof value === 'string') {
-          scan(value);
+      // オブジェクト形式の場合、キー名を変数名として追加
+      Object.keys(inputs).forEach(key => {
+        if (key && typeof key === 'string') {
+          const cleaned = key.normalize('NFKC').trim().replace(/\s+/g, ' ');
+          if (cleaned) set.add(cleaned);
         }
       });
     }
@@ -259,8 +269,8 @@ function contentBounds() {
     maxX = Math.max(maxX, x + w);
     maxY = Math.max(maxY, y + h);
   });
-  if (!isFinite(minX)) return { x:0, y:0, w:1, h:1 };
-  return { x:minX, y:minY, w:Math.max(1, maxX-minX), h:Math.max(1, maxY-minY) };
+  if (!isFinite(minX)) return { x: 0, y: 0, w: 1, h: 1 };
+  return { x: minX, y: minY, w: Math.max(1, maxX - minX), h: Math.max(1, maxY - minY) };
 }
 
 /** 列ごとに垂直センタリング（ズーム倍率を反映） */
@@ -274,12 +284,12 @@ function autolayoutByExec(options = {}) {
   const colW = 360; // node width + spacing
   const rowH = 170;
 
-  const execs = Array.from(new Set(state.blocks.map(b => b.exec || 1))).sort((a,b)=>a-b);
+  const execs = Array.from(new Set(state.blocks.map(b => b.exec || 1))).sort((a, b) => a - b);
   const xMap = new Map();
   execs.forEach((ex, i) => xMap.set(ex, 40 + i * (colW + marginX)));
 
   const byExec = new Map();
-  execs.forEach(ex => byExec.set(ex, state.blocks.filter(b => (b.exec||1) === ex)));
+  execs.forEach(ex => byExec.set(ex, state.blocks.filter(b => (b.exec || 1) === ex)));
 
   byExec.forEach((list, ex) => {
     const x = xMap.get(ex);

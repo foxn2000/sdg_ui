@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Arrow keys: nudge
-    if (selectedBlockId && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+    if (selectedBlockId && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
       e.preventDefault();
       const step = GRID;
       let dx = 0, dy = 0;
@@ -63,10 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMod = e.ctrlKey || e.metaKey;
     if (isMod && (e.key === '+' || e.key === '=')) {
       e.preventDefault();
-      zoomBy(1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
+      zoomBy(1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
     } else if (isMod && e.key === '-') {
       e.preventDefault();
-      zoomBy(1/1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
+      zoomBy(1 / 1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
     } else if (isMod && (e.key === '0' || e.key === 'Backspace')) {
       e.preventDefault();
       resetZoom();
@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function bindCanvasPanning() {
   let spaceDown = false;
   let panning = false;
-  let start = { x:0, y:0 };
-  let origin = { x:0, y:0 };
+  let start = { x: 0, y: 0 };
+  let origin = { x: 0, y: 0 };
 
   const startPan = (ev) => {
     panning = true;
@@ -162,7 +162,7 @@ function zoomBy(factor, anchorScreen) {
 }
 
 function resetZoom() {
-  setScale(1, { x: canvas.clientWidth/2, y: canvas.clientHeight/2 });
+  setScale(1, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
 }
 
 function fitToContent() {
@@ -170,16 +170,16 @@ function fitToContent() {
   const b = contentBounds();
   const W = canvas.clientWidth, H = canvas.clientHeight;
   const margin = 60; // px (screen)
-  const sFit = clamp(Math.min((W - 2*margin) / Math.max(b.w, 1), (H - 2*margin) / Math.max(b.h, 1)), MIN_ZOOM, MAX_ZOOM);
+  const sFit = clamp(Math.min((W - 2 * margin) / Math.max(b.w, 1), (H - 2 * margin) / Math.max(b.h, 1)), MIN_ZOOM, MAX_ZOOM);
   viewport.s = sFit;
   // 中央配置（ワールド→スクリーン: (x + vx)*s ）
-  viewport.x = (W/(2*sFit)) - (b.x + b.w/2);
-  viewport.y = (H/(2*sFit)) - (b.y + b.h/2);
+  viewport.x = (W / (2 * sFit)) - (b.x + b.w / 2);
+  viewport.y = (H / (2 * sFit)) - (b.y + b.h / 2);
   applyViewport();
   raf(drawConnections);
 }
 
-function setScale(newScale, anchorScreen = {x: canvas.clientWidth/2, y: canvas.clientHeight/2}) {
+function setScale(newScale, anchorScreen = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }) {
   const s0 = viewport.s;
   const s1 = clamp(newScale, MIN_ZOOM, MAX_ZOOM);
   if (Math.abs(s1 - s0) < 1e-4) return;
@@ -209,8 +209,8 @@ function mountZoomHud() {
   `;
   canvas.appendChild(hud);
 
-  el('#zoomOut', hud).onclick = () => zoomBy(1/1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
-  el('#zoomIn', hud).onclick = () => zoomBy(1.15, {x: canvas.clientWidth/2, y: canvas.clientHeight/2});
+  el('#zoomOut', hud).onclick = () => zoomBy(1 / 1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
+  el('#zoomIn', hud).onclick = () => zoomBy(1.15, { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 });
   el('#zoomFit', hud).onclick = () => fitToContent();
   el('#zoomReset', hud).onclick = () => resetZoom();
   updateZoomHud();
@@ -259,13 +259,25 @@ function bindGlobalButtons() {
   // クリア
   el('#btnClear').onclick = () => {
     if (!confirm('Clear all models & blocks?')) return;
+    // 全ステートを初期化
+    state.mabel = { version: '2.1' };
+    state.runtime = {};
+    state.globals = {};
+    state.budgets = {};
+    state.functions = {};
+    state.images = [];
     state.models = [];
+    state.templates = [];
+    state.files = [];
     state.blocks = [];
+    state.connections = [];
     state.idCounter = 1;
+    // 選択状態をリセット
+    selectedBlockId = null;
     renderModelsPanel();
     renderNodes();
     drawConnections();
-    yamlPreview.value = '';
+    if (yamlPreview) yamlPreview.value = '';
   };
 
   // 自動レイアウト
@@ -312,10 +324,10 @@ function bindImport() {
     fileInput.value = '';
   });
 
-  ['dragenter','dragover'].forEach(ev =>
+  ['dragenter', 'dragover'].forEach(ev =>
     importDrop.addEventListener(ev, (e) => { e.preventDefault(); importDrop.classList.add('drag'); })
   );
-  ['dragleave','drop'].forEach(ev =>
+  ['dragleave', 'drop'].forEach(ev =>
     importDrop.addEventListener(ev, (e) => { e.preventDefault(); importDrop.classList.remove('drag'); })
   );
   importDrop.addEventListener('drop', async (e) => {

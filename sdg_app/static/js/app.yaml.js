@@ -143,6 +143,12 @@ function toYAML(state) {
         if (m.base_url) push(`    base_url: ${yamlStr(m.base_url)}`);
         if (m.organization) push(`    organization: ${yamlStr(m.organization)}`);
         if (m.headers && Object.keys(m.headers).length) push(`    headers: ${dumpInlineObj(m.headers)}`);
+        // Reasoning settings
+        if (m.enable_reasoning != null) push(`    enable_reasoning: ${m.enable_reasoning}`);
+        if (m.include_reasoning != null) push(`    include_reasoning: ${m.include_reasoning}`);
+        if (m.exclude_reasoning != null) push(`    exclude_reasoning: ${m.exclude_reasoning}`);
+        if (m.reasoning_effort) push(`    reasoning_effort: ${m.reasoning_effort}`);
+        if (m.reasoning_max_tokens != null && m.reasoning_max_tokens !== '') push(`    reasoning_max_tokens: ${m.reasoning_max_tokens}`);
       } catch (err) {
         console.error(`Error processing model ${idx}:`, err, m);
         push(`    # ERROR: Failed to process model ${idx}`);
@@ -445,6 +451,12 @@ function toYAMLModels(stateOrModels) {
     if (m.base_url) push(`    base_url: ${yamlStr(m.base_url)}`);
     if (m.organization) push(`    organization: ${yamlStr(m.organization)}`);
     if (m.headers && Object.keys(m.headers).length) push(`    headers: ${dumpInlineObj(m.headers)}`);
+    // Reasoning settings
+    if (m.enable_reasoning != null) push(`    enable_reasoning: ${m.enable_reasoning}`);
+    if (m.include_reasoning != null) push(`    include_reasoning: ${m.include_reasoning}`);
+    if (m.exclude_reasoning != null) push(`    exclude_reasoning: ${m.exclude_reasoning}`);
+    if (m.reasoning_effort) push(`    reasoning_effort: ${m.reasoning_effort}`);
+    if (m.reasoning_max_tokens != null && m.reasoning_max_tokens !== '') push(`    reasoning_max_tokens: ${m.reasoning_max_tokens}`);
     const d = m.request_defaults || {};
     const hasD = Object.keys(d).some(k => {
       const v = d[k];
@@ -535,6 +547,25 @@ async function importYamlText(text) {
       if (!bb.title && bb.py_name) bb.title = bb.py_name;
 
       return bb;
+    });
+
+    // Pythonブロック: YAML の outputs → py_outputs に変換（UI内部フィールドとYAMLフィールドの対応づけ）
+    newBlocks.forEach(bb => {
+      if (bb.type === 'python') {
+        // outputs が存在し py_outputs が未設定の場合に変換
+        if (!bb.py_outputs && bb.outputs) {
+          bb.py_outputs = (bb.outputs || []).map(o =>
+            typeof o === 'string' ? o : (o && o.name) ? o.name : ''
+          ).filter(Boolean);
+          delete bb.outputs;
+        }
+        // inputs が空オブジェクト {} などの非配列の場合は空配列に正規化
+        if (bb.inputs && !Array.isArray(bb.inputs)) {
+          bb.inputs = [];
+        }
+        // py_name がなければ name フィールドを使用
+        if (!bb.py_name && bb.name) bb.py_name = bb.name;
+      }
     });
 
     // モデルはそのまま置換

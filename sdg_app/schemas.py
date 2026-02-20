@@ -5,15 +5,22 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 class ImageDef(BaseModel):
     """MABEL v2.1 Image Definition - 静的画像定義"""
-    name: str = Field(..., description="画像の識別名（プロンプト内で {name.img} として参照）")
+
+    name: str = Field(
+        ..., description="画像の識別名（プロンプト内で {name.img} として参照）"
+    )
     path: Optional[str] = Field(None, description="ローカルファイルパス")
     url: Optional[str] = Field(None, description="画像URL")
     base64: Optional[str] = Field(None, description="Base64エンコード済み画像データ")
-    media_type: str = Field("image/png", description="MIMEタイプ (image/png, image/jpeg, image/gif, image/webp)")
+    media_type: str = Field(
+        "image/png",
+        description="MIMEタイプ (image/png, image/jpeg, image/gif, image/webp)",
+    )
 
 
 class ModelDef(BaseModel):
     """MABEL v2 Model Definition"""
+
     id: str = Field(..., description="Model identifier (e.g., 'gpt-4o-mini')")
     name: Optional[str] = None
     api_model: Optional[str] = None
@@ -27,10 +34,18 @@ class ModelDef(BaseModel):
     provider: Optional[str] = None
     label: Optional[str] = None
     meta: Dict[str, Any] = Field(default_factory=dict)
+    # Reasoning settings
+    enable_reasoning: Optional[bool] = None
+    include_reasoning: Optional[bool] = None
+    exclude_reasoning: Optional[bool] = None
+    reasoning_effort: Optional[str] = None
+    reasoning_max_tokens: Optional[int] = None
+
 
 class Block(BaseModel):
     """MABEL v2 Block Definition"""
-    model_config = ConfigDict(extra='allow')
+
+    model_config = ConfigDict(extra="allow")
     type: str
     exec: int | None = 1
     id: Optional[str] = None
@@ -52,8 +67,10 @@ class Block(BaseModel):
             raise ValueError("type is required")
         return v
 
+
 class GraphState(BaseModel):
     """MABEL v2.1 Graph State"""
+
     mabel: Dict[str, Any] = Field(default_factory=lambda: {"version": "2.1"})
     runtime: Dict[str, Any] = Field(default_factory=dict)
     globals: Dict[str, Any] = Field(default_factory=dict)
@@ -66,8 +83,10 @@ class GraphState(BaseModel):
     blocks: List[Block] = Field(default_factory=list)
     connections: List[Dict[str, Any]] = Field(default_factory=dict)
 
+
 class ImportRequest(BaseModel):
     yaml: Optional[str] = None
+
 
 class ExportRequest(BaseModel):
     state: GraphState

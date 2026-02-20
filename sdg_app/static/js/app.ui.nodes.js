@@ -338,7 +338,7 @@ function renderIoPills(b) {
   if (b.type === 'start') outputs = (b.outputs || []);
   if (b.type === 'ai') outputs = (b.outputs || []).map(o => o.name);
   if (b.type === 'logic') outputs = (b.outputs || []).map(o => o.name);
-  if (b.type === 'python') outputs = (b.py_outputs || []);
+  if (b.type === 'python') outputs = getPyOutputNames(b);
   const outputsHtml = outputs.map(n => `<span class="io-pill">out:${escapeHtml(n)}</span>`).join('');
   return inputsHtml + outputsHtml;
 }

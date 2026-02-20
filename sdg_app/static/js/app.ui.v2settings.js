@@ -21,152 +21,157 @@ function buildV2SettingsForm() {
   const s = state;
 
   return `
-    <div class="form-grid">
-      <!-- MABEL メタデータ -->
-      <details class="full" open>
-        <summary><h3>MABELメタデータ</h3></summary>
-        <div class="form-grid">
-          <label>version</label>
-          <input data-v2="mabel.version" value="${escapeAttr(s.mabel?.version || '2.1')}" readonly>
-          <label>id</label>
-          <input data-v2="mabel.id" value="${escapeAttr(s.mabel?.id || '')}" placeholder="com.example.agent.myagent">
-          <label class="full">name</label>
-          <input class="full" data-v2="mabel.name" value="${escapeAttr(s.mabel?.name || '')}" placeholder="My Agent">
-          <label class="full">description</label>
-          <textarea class="full" rows="2" data-v2="mabel.description" placeholder="エージェントの説明">${escapeHtml(s.mabel?.description || '')}</textarea>
-        </div>
-      </details>
-
-      <!-- Runtime -->
-      <details class="full" open>
-        <summary><h3>Runtime（実行環境）</h3></summary>
-        <div class="form-grid">
-          <label class="full">Python設定</label>
-          <label>interpreter</label>
-          <input data-v2="runtime.python.interpreter" value="${escapeAttr(s.runtime?.python?.interpreter || '')}" placeholder="python>=3.11,<3.13">
-          <label>venv</label>
-          <input data-v2="runtime.python.venv" value="${escapeAttr(s.runtime?.python?.venv || '')}" placeholder=".venv">
-          <label>requirements_file</label>
-          <input class="full" data-v2="runtime.python.requirements_file" value="${escapeAttr(s.runtime?.python?.requirements_file || '')}" placeholder="requirements.txt">
-          <label class="full">requirements（1行1パッケージ）</label>
-          <textarea class="full" rows="3" data-v2="runtime.python.requirements" placeholder="numpy>=1.20.0\npandas>=1.3.0">${escapeHtml(Array.isArray(s.runtime?.python?.requirements) ? s.runtime.python.requirements.join('\n') : '')}</textarea>
-          <label>allow_network</label>
-          <select data-v2="runtime.python.allow_network">
-            <option value="true" ${s.runtime?.python?.allow_network === true ? 'selected' : ''}>true</option>
-            <option value="false" ${s.runtime?.python?.allow_network === false ? 'selected' : ''}>false</option>
-            <option value="" ${s.runtime?.python?.allow_network === undefined ? 'selected' : ''}>(未設定)</option>
-          </select>
-          <label class="full">env（環境変数、1行1つ: KEY=value）</label>
-          <textarea class="full" rows="3" data-v2="runtime.python.env" placeholder="DEBUG=true\nLOG_LEVEL=info">${escapeHtml(s.runtime?.python?.env ? Object.entries(s.runtime.python.env).map(([k, v]) => `${k}=${v}`).join('\n') : '')}</textarea>
-        </div>
-      </details>
-
-      <!-- Budgets -->
-      <details class="full">
-        <summary><h3>Budgets（実行予算）</h3></summary>
-        <div class="form-grid">
-          <label class="full">Loops</label>
-          <label>max_iters</label>
-          <input type="number" data-v2="budgets.loops.max_iters" value="${s.budgets?.loops?.max_iters || ''}" placeholder="1000">
-          <label>on_exceed</label>
-          <select data-v2="budgets.loops.on_exceed">
-            <option value="">(未設定)</option>
-            <option value="error" ${s.budgets?.loops?.on_exceed === 'error' ? 'selected' : ''}>error</option>
-            <option value="truncate" ${s.budgets?.loops?.on_exceed === 'truncate' ? 'selected' : ''}>truncate</option>
-            <option value="warn" ${s.budgets?.loops?.on_exceed === 'warn' ? 'selected' : ''}>warn</option>
-          </select>
-
-          <label class="full">Recursion</label>
-          <label>max_depth</label>
-          <input type="number" data-v2="budgets.recursion.max_depth" value="${s.budgets?.recursion?.max_depth || ''}" placeholder="64">
-          <label>on_exceed</label>
-          <select data-v2="budgets.recursion.on_exceed">
-            <option value="">(未設定)</option>
-            <option value="error" ${s.budgets?.recursion?.on_exceed === 'error' ? 'selected' : ''}>error</option>
-            <option value="truncate" ${s.budgets?.recursion?.on_exceed === 'truncate' ? 'selected' : ''}>truncate</option>
-            <option value="warn" ${s.budgets?.recursion?.on_exceed === 'warn' ? 'selected' : ''}>warn</option>
-          </select>
-
-          <label class="full">wall_time_ms（全体タイムアウト）</label>
-          <input type="number" class="full" data-v2="budgets.wall_time_ms" value="${s.budgets?.wall_time_ms || ''}" placeholder="120000">
-
-          <label class="full">AI予算</label>
-          <label>max_calls</label>
-          <input type="number" data-v2="budgets.ai.max_calls" value="${s.budgets?.ai?.max_calls || ''}" placeholder="100">
-          <label>max_tokens</label>
-          <input type="number" data-v2="budgets.ai.max_tokens" value="${s.budgets?.ai?.max_tokens || ''}" placeholder="1000000">
-        </div>
-      </details>
-
-      <!-- Globals -->
-      <details class="full">
-        <summary><h3>Globals（グローバル変数）</h3></summary>
-        <div class="form-grid">
-          <label class="full">const（定数、1行1つ: KEY: value または KEY: {json}）</label>
-          <textarea class="full" rows="4" data-v2="globals.const" placeholder="APP_NAME: My App\nVERSION: 1.0.0\nCONFIG: {debug: true}">${escapeHtml(s.globals?.const ? formatGlobalsForTextarea(s.globals.const) : '')}</textarea>
-          
-          <label class="full">vars（変数、1行1つ: KEY: value または KEY: {json}）</label>
-          <textarea class="full" rows="4" data-v2="globals.vars" placeholder="counter: 0\nresult: []">${escapeHtml(s.globals?.vars ? formatGlobalsForTextarea(s.globals.vars) : '')}</textarea>
-        </div>
-      </details>
-
-      <!-- Images (v2.1) -->
-      <details class="full">
-        <summary><h3>Images（静的画像定義）<span class="badge">v2.1</span></h3></summary>
-        <div class="form-grid">
-          <div class="small-note full">プロンプト内で <code>{name.img}</code> として参照できる静的画像を定義します。</div>
-          <div class="full" id="imagesContainer">
-            ${(s.images || []).map((img, i) => buildImageRow(img, i)).join('')}
+    <div class="tabs-container">
+      <div class="tabs-nav">
+        <button type="button" class="tab-btn active" data-tab="meta">Metadata</button>
+        <button type="button" class="tab-btn" data-tab="runtime">Runtime</button>
+        <button type="button" class="tab-btn" data-tab="budgets">Budgets</button>
+        <button type="button" class="tab-btn" data-tab="globals">Globals</button>
+        <button type="button" class="tab-btn" data-tab="images">Images <span class="badge">v2.1</span></button>
+        <button type="button" class="tab-btn" data-tab="templates">Templates</button>
+        <button type="button" class="tab-btn" data-tab="files">Files</button>
+        <button type="button" class="tab-btn" data-tab="functions">Functions</button>
+        <button type="button" class="tab-btn" data-tab="connections">Connections</button>
+      </div>
+      <div class="tabs-content">
+        <!-- Metadata -->
+        <div class="tab-pane active" id="tab-meta">
+          <div class="form-grid">
+            <label>version</label>
+            <input data-v2="mabel.version" value="${escapeAttr(s.mabel?.version || '2.1')}" readonly>
+            <label>id</label>
+            <input data-v2="mabel.id" value="${escapeAttr(s.mabel?.id || '')}" placeholder="com.example.agent.myagent">
+            <label class="full">name</label>
+            <input class="full" data-v2="mabel.name" value="${escapeAttr(s.mabel?.name || '')}" placeholder="My Agent">
+            <label class="full">description</label>
+            <textarea class="full" rows="2" data-v2="mabel.description" placeholder="エージェントの説明">${escapeHtml(s.mabel?.description || '')}</textarea>
           </div>
-          <button type="button" class="accent full" id="btnAddImage">+ 画像追加</button>
         </div>
-      </details>
 
-      <!-- Templates -->
-      <details class="full">
-        <summary><h3>Templates（文字列テンプレート）</h3></summary>
-        <div class="form-grid">
-          <div class="full" id="templatesContainer">
-            ${(s.templates || []).map((t, i) => buildTemplateRow(t, i)).join('')}
+        <!-- Runtime -->
+        <div class="tab-pane" id="tab-runtime">
+          <div class="form-grid">
+            <div class="section-title full">Python設定</div>
+            <label>interpreter</label>
+            <input data-v2="runtime.python.interpreter" value="${escapeAttr(s.runtime?.python?.interpreter || '')}" placeholder="python>=3.11,<3.13">
+            <label>venv</label>
+            <input data-v2="runtime.python.venv" value="${escapeAttr(s.runtime?.python?.venv || '')}" placeholder=".venv">
+            <label>requirements_file</label>
+            <input class="full" data-v2="runtime.python.requirements_file" value="${escapeAttr(s.runtime?.python?.requirements_file || '')}" placeholder="requirements.txt">
+            <label class="full">requirements（1行1パッケージ）</label>
+            <textarea class="full" rows="3" data-v2="runtime.python.requirements" placeholder="numpy>=1.20.0\npandas>=1.3.0">${escapeHtml(Array.isArray(s.runtime?.python?.requirements) ? s.runtime.python.requirements.join('\n') : '')}</textarea>
+            <label>allow_network</label>
+            <select data-v2="runtime.python.allow_network">
+              <option value="true" ${s.runtime?.python?.allow_network === true ? 'selected' : ''}>true</option>
+              <option value="false" ${s.runtime?.python?.allow_network === false ? 'selected' : ''}>false</option>
+              <option value="" ${s.runtime?.python?.allow_network === undefined ? 'selected' : ''}>(未設定)</option>
+            </select>
+            <label class="full">env（環境変数、1行1つ: KEY=value）</label>
+            <textarea class="full" rows="3" data-v2="runtime.python.env" placeholder="DEBUG=true\nLOG_LEVEL=info">${escapeHtml(s.runtime?.python?.env ? Object.entries(s.runtime.python.env).map(([k, v]) => `${k}=${v}`).join('\n') : '')}</textarea>
           </div>
-          <button type="button" class="accent full" id="btnAddTemplate">+ テンプレート追加</button>
         </div>
-      </details>
 
-      <!-- Files -->
-      <details class="full">
-        <summary><h3>Files（組み込みファイル）</h3></summary>
-        <div class="form-grid">
-          <div class="full" id="filesContainer">
-            ${(s.files || []).map((f, i) => buildFileRow(f, i)).join('')}
+        <!-- Budgets -->
+        <div class="tab-pane" id="tab-budgets">
+          <div class="form-grid">
+            <div class="section-title full">Loops</div>
+            <label>max_iters</label>
+            <input type="number" data-v2="budgets.loops.max_iters" value="${s.budgets?.loops?.max_iters || ''}" placeholder="1000">
+            <label>on_exceed</label>
+            <select data-v2="budgets.loops.on_exceed">
+              <option value="">(未設定)</option>
+              <option value="error" ${s.budgets?.loops?.on_exceed === 'error' ? 'selected' : ''}>error</option>
+              <option value="truncate" ${s.budgets?.loops?.on_exceed === 'truncate' ? 'selected' : ''}>truncate</option>
+              <option value="warn" ${s.budgets?.loops?.on_exceed === 'warn' ? 'selected' : ''}>warn</option>
+            </select>
+
+            <div class="section-title full">Recursion</div>
+            <label>max_depth</label>
+            <input type="number" data-v2="budgets.recursion.max_depth" value="${s.budgets?.recursion?.max_depth || ''}" placeholder="64">
+            <label>on_exceed</label>
+            <select data-v2="budgets.recursion.on_exceed">
+              <option value="">(未設定)</option>
+              <option value="error" ${s.budgets?.recursion?.on_exceed === 'error' ? 'selected' : ''}>error</option>
+              <option value="truncate" ${s.budgets?.recursion?.on_exceed === 'truncate' ? 'selected' : ''}>truncate</option>
+              <option value="warn" ${s.budgets?.recursion?.on_exceed === 'warn' ? 'selected' : ''}>warn</option>
+            </select>
+
+            <div class="section-title full">Global</div>
+            <label class="full">wall_time_ms（全体タイムアウト）</label>
+            <input type="number" class="full" data-v2="budgets.wall_time_ms" value="${s.budgets?.wall_time_ms || ''}" placeholder="120000">
+
+            <div class="section-title full">AI予算</div>
+            <label>max_calls</label>
+            <input type="number" data-v2="budgets.ai.max_calls" value="${s.budgets?.ai?.max_calls || ''}" placeholder="100">
+            <label>max_tokens</label>
+            <input type="number" data-v2="budgets.ai.max_tokens" value="${s.budgets?.ai?.max_tokens || ''}" placeholder="1000000">
           </div>
-          <button type="button" class="accent full" id="btnAddFile">+ ファイル追加</button>
         </div>
-      </details>
 
-      <!-- Functions -->
-      <details class="full">
-        <summary><h3>Functions（ユーザ定義関数）</h3></summary>
-        <div class="form-grid">
-          <label class="full">Logic Functions（JSON配列）</label>
-          <textarea class="full" rows="6" data-v2="functions.logic" placeholder='[{"name": "square", "args": ["x"], "returns": ["result"], "body": [...]}]'>${escapeHtml(s.functions?.logic ? JSON.stringify(s.functions.logic, null, 2) : '')}</textarea>
-          
-          <label class="full">Python Functions（JSON配列）</label>
-          <textarea class="full" rows="6" data-v2="functions.python" placeholder='[{"name": "helper", "params": ["x"], "code": "def helper(x):\\n    return x * 2"}]'>${escapeHtml(s.functions?.python ? JSON.stringify(s.functions.python, null, 2) : '')}</textarea>
-        </div>
-      </details>
-
-      <!-- Connections -->
-      <details class="full">
-        <summary><h3>Connections（明示的な接続定義）</h3></summary>
-        <div class="form-grid">
-          <div class="small-note full">通常は自動配線されるため、明示的な指定は不要です。特殊な配線が必要な場合のみ使用してください。</div>
-          <div class="full" id="connectionsContainer">
-            ${(s.connections || []).map((c, i) => buildConnectionRow(c, i)).join('')}
+        <!-- Globals -->
+        <div class="tab-pane" id="tab-globals">
+          <div class="form-grid">
+            <label class="full">const（定数、1行1つ: KEY: value または KEY: {json}）</label>
+            <textarea class="full" rows="4" data-v2="globals.const" placeholder="APP_NAME: My App\nVERSION: 1.0.0\nCONFIG: {debug: true}">${escapeHtml(s.globals?.const ? formatGlobalsForTextarea(s.globals.const) : '')}</textarea>
+            
+            <label class="full">vars（変数、1行1つ: KEY: value または KEY: {json}）</label>
+            <textarea class="full" rows="4" data-v2="globals.vars" placeholder="counter: 0\nresult: []">${escapeHtml(s.globals?.vars ? formatGlobalsForTextarea(s.globals.vars) : '')}</textarea>
           </div>
-          <button type="button" class="accent full" id="btnAddConnection">+ 接続追加</button>
         </div>
-      </details>
+
+        <!-- Images -->
+        <div class="tab-pane" id="tab-images">
+          <div class="form-grid">
+            <div class="small-note full">プロンプト内で <code>{name.img}</code> として参照できる静的画像を定義します。</div>
+            <div class="full" id="imagesContainer">
+              ${(s.images || []).map((img, i) => buildImageRow(img, i)).join('')}
+            </div>
+            <button type="button" class="accent full" id="btnAddImage">+ 画像追加</button>
+          </div>
+        </div>
+
+        <!-- Templates -->
+        <div class="tab-pane" id="tab-templates">
+          <div class="form-grid">
+            <div class="full" id="templatesContainer">
+              ${(s.templates || []).map((t, i) => buildTemplateRow(t, i)).join('')}
+            </div>
+            <button type="button" class="accent full" id="btnAddTemplate">+ テンプレート追加</button>
+          </div>
+        </div>
+
+        <!-- Files -->
+        <div class="tab-pane" id="tab-files">
+          <div class="form-grid">
+            <div class="full" id="filesContainer">
+              ${(s.files || []).map((f, i) => buildFileRow(f, i)).join('')}
+            </div>
+            <button type="button" class="accent full" id="btnAddFile">+ ファイル追加</button>
+          </div>
+        </div>
+
+        <!-- Functions -->
+        <div class="tab-pane" id="tab-functions">
+          <div class="form-grid">
+            <label class="full">Logic Functions（JSON配列）</label>
+            <textarea class="full" rows="6" data-v2="functions.logic" placeholder='[{"name": "square", "args": ["x"], "returns": ["result"], "body": [...]}]'>${escapeHtml(s.functions?.logic ? JSON.stringify(s.functions.logic, null, 2) : '')}</textarea>
+            
+            <label class="full">Python Functions（JSON配列）</label>
+            <textarea class="full" rows="6" data-v2="functions.python" placeholder='[{"name": "helper", "params": ["x"], "code": "def helper(x):\\n    return x * 2"}]'>${escapeHtml(s.functions?.python ? JSON.stringify(s.functions.python, null, 2) : '')}</textarea>
+          </div>
+        </div>
+
+        <!-- Connections -->
+        <div class="tab-pane" id="tab-connections">
+          <div class="form-grid">
+            <div class="small-note full">通常は自動配線されるため、明示的な指定は不要です。特殊な配線が必要な場合のみ使用してください。</div>
+            <div class="full" id="connectionsContainer">
+              ${(s.connections || []).map((c, i) => buildConnectionRow(c, i)).join('')}
+            </div>
+            <button type="button" class="accent full" id="btnAddConnection">+ 接続追加</button>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -212,7 +217,7 @@ function parseGlobalsFromTextarea(text) {
 // 画像行の構築 (v2.1)
 function buildImageRow(img, i) {
   return `
-    <fieldset class="form-grid" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
+    <fieldset class="item-card form-grid">
       <legend>Image ${i + 1}</legend>
       <label>name（必須）</label>
       <input data-image-idx="${i}" data-image-k="name" value="${escapeAttr(img.name || '')}" placeholder="logo">
@@ -237,7 +242,7 @@ function buildImageRow(img, i) {
 // テンプレート行の構築
 function buildTemplateRow(t, i) {
   return `
-    <fieldset class="form-grid" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
+    <fieldset class="item-card form-grid">
       <legend>Template ${i + 1}</legend>
       <label>name</label>
       <input data-template-idx="${i}" data-template-k="name" value="${escapeAttr(t.name || '')}" placeholder="header">
@@ -251,7 +256,7 @@ function buildTemplateRow(t, i) {
 // ファイル行の構築
 function buildFileRow(f, i) {
   return `
-    <fieldset class="form-grid" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
+    <fieldset class="item-card form-grid">
       <legend>File ${i + 1}</legend>
       <label>name</label>
       <input data-file-idx="${i}" data-file-k="name" value="${escapeAttr(f.name || '')}" placeholder="data.txt">
@@ -267,7 +272,7 @@ function buildFileRow(f, i) {
 // 接続行の構築
 function buildConnectionRow(c, i) {
   return `
-    <fieldset class="form-grid" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
+    <fieldset class="item-card form-grid">
       <legend>Connection ${i + 1}</legend>
       <label>from (block id)</label>
       <input data-conn-idx="${i}" data-conn-k="from" value="${escapeAttr(c.from || '')}" placeholder="block_id">
@@ -442,6 +447,20 @@ function saveV2Settings() {
 
 // イベントハンドラ
 v2SettingsBody.addEventListener('click', (e) => {
+  // タブ切り替え
+  const tabBtn = e.target.closest('.tab-btn');
+  if (tabBtn) {
+    const tabId = tabBtn.dataset.tab;
+
+    // タブボタンのアクティブ状態を更新
+    els('.tab-btn', v2SettingsBody).forEach(btn => btn.classList.remove('active'));
+    tabBtn.classList.add('active');
+
+    // タブペインのアクティブ状態を更新
+    els('.tab-pane', v2SettingsBody).forEach(pane => pane.classList.remove('active'));
+    el(`#tab-${tabId}`, v2SettingsBody).classList.add('active');
+  }
+
   // Image追加 (v2.1)
   if (e.target.id === 'btnAddImage') {
     const container = el('#imagesContainer', v2SettingsBody);

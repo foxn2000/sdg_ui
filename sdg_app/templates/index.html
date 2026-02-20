@@ -30,19 +30,6 @@
             <path
               d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg></span>v2設定</button>
-      <details class="ghost-d">
-        <summary>Help</summary>
-        <div class="popover">
-          <p><b>クイックヘルプ</b></p>
-          <ul>
-            <li>右の <b>AI / LOGIC / CODE / END</b> を左のキャンバスへドラッグ</li>
-            <li>ノードをクリックして編集（任意項目は <code><details></code> 内）</li>
-            <li><b>Save</b> で自動配線・自動整列</li>
-            <li>移動: <span class="kbd">Space</span>+ドラッグ ／ ズーム: <span class="kbd">Ctrl/⌘</span>+ホイール</li>
-            <li>YAML: <b>Generate</b> で保存 ／ <b>Import</b> で読込</li>
-          </ul>
-        </div>
-      </details>
     </div>
   </header>
 
@@ -283,19 +270,18 @@
   </main>
 
   <!-- ブロック編集モーダル -->
-  <dialog id="editorModal" class="modal glass">
+  <dialog id="editorModal" class="modal modal--wide glass">
     <form method="dialog" id="editorForm">
       <header class="modal-head">
         <h3 id="editorTitle">Block Editor</h3>
-        <!-- 変更: ブロックの×と同意匠にするため del を付与 -->
         <button class="del icon-close" value="cancel" aria-label="close" type="button"
           onclick="this.closest('dialog').close()"><span class="icon icon-x"><svg viewBox="0 0 24 24">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg></span></button>
       </header>
-      <div class="modal-body" id="editorBody">
-        <!-- JSでブロック別フォームを生成 -->
+      <div class="modal-body modal-body--tabs" id="editorBody">
+        <!-- JSでブロック別タブフォームを生成 -->
       </div>
       <footer class="modal-foot">
         <button class="ghost" value="cancel" type="button" onclick="this.closest('dialog').close()">Cancel</button>
@@ -337,7 +323,7 @@
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg></span></button>
       </header>
-      <div class="modal-body" id="modelModalBody">
+      <div class="modal-body modal-body--tabs" id="modelModalBody">
         <!-- JSでモデル設定フォームを生成 -->
       </div>
       <footer class="modal-foot">
@@ -349,7 +335,7 @@
   </dialog>
 
   <!-- v2設定モーダル -->
-  <dialog id="v2SettingsModal" class="modal glass" style="width: 90%; max-width: 1000px;">
+  <dialog id="v2SettingsModal" class="modal modal--wide glass">
     <form method="dialog" id="v2SettingsForm">
       <header class="modal-head">
         <h3>MABEL v2 設定</h3>
@@ -359,7 +345,7 @@
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg></span></button>
       </header>
-      <div class="modal-body" id="v2SettingsBody" style="max-height: 70vh; overflow-y: auto;">
+      <div class="modal-body modal-body--tabs" id="v2SettingsBody">
         <!-- JSで設定フォームを生成 -->
       </div>
       <footer class="modal-foot">

@@ -197,7 +197,8 @@
     display: flex;
     flex-direction: column;
     flex: 0 0 auto;
-    max-height: 45%;
+    max-height: 48vh;
+    min-height: 32vh;
 }
 
 #modelsPanel .panel-head {
@@ -237,8 +238,8 @@
 
 #modelsPanel .models-list {
     flex: 1 1 0;
-    min-height: 0;
-    overflow: auto;
+    min-height: 80px;
+    overflow-y: auto;
 }
 
 #libraryPanel .panel-head {
@@ -246,142 +247,163 @@
     top: 0;
 }
 
-/* Models List */
+/* ===== Models List ===== */
 .models-list {
-    padding: 6px 8px;
-    padding: 12px;
-    background: #fafbfc;
-}
-
-.models-list details {
-    border-top: 1px solid #eef1f4;
     padding: 10px 12px;
-    margin: 8px 0;
-    border-radius: 12px;
-    border: 1px solid #e5e8ed;
+    background: #fafbfc;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.models-empty {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
     background: #ffffff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
-    transition: all 0.15s ease;
+    border-radius: 10px;
+    border: 1px dashed #e2e6eb;
 }
 
-.models-list details:hover {
-    border-color: #d1d5db;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.models-list details[open] {
-    background: var(--panel-alt);
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.models-list summary {
-    list-style: none;
-    cursor: pointer;
+/* ===== Model Card ===== */
+.model-card {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 0;
-    border: none;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e8ed;
     background: #ffffff;
-    transition: background 0.12s ease;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, background .12s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    position: relative;
 }
 
-.models-list summary:hover {
-    background: #f9fafb;
+.model-card:hover {
+    border-color: #93c5fd;
+    background: #f8fbff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.models-list details[open]>summary {
-    border-bottom: 1px solid #e5e8ed;
-    background: #f8fafc;
+/* インデックスバッジ */
+.model-card-badge {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
 }
 
-.model-info {
+.model-card:hover .model-card-badge {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.model-card-body {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    flex: 1;
-    min-width: 0;
 }
 
 .model-title {
-    font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .model-id {
-    color: var(--muted);
-    font-size: 12px;
-    font-size: 11px;
+    font-size: 10px;
     color: #9ca3af;
     font-family: var(--mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.model-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.model-grid label {
-    font-size: 12px;
-    color: var(--muted)
-}
-
-.model-grid input,
-.model-grid textarea,
-.model-grid select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #e6e8eb;
-    background: #ffffff;
-    color: var(--text);
-    font-family: var(--mono)
-}
-
-.model-grid details {
-    border: 1px dashed #d7dce3;
-    border-radius: 12px;
-    padding: 8px 8px;
-    background: #ffffff
-}
-
-.model-actions {
+/* アクションボタン群：通常は非表示、ホバーで表示 */
+.model-card-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 8px
+    gap: 3px;
+    flex-shrink: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(4px);
+    transition: opacity .15s ease, visibility .15s ease, transform .15s ease;
 }
 
-.model-delete-btn {
-    flex-shrink: 0;
-    background: #ffffff;
-    color: var(--text);
-    border: 1px solid #eceff3;
-    width: 28px;
-    height: 28px;
-    border-radius: 10px;
+.model-card:hover .model-card-actions {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* アクションボタン共通 */
+.model-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    line-height: 1;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1px solid #e2e6eb;
+    background: #ffffff;
+    color: #6b7280;
     padding: 0;
-    transition: all .12s ease;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
 }
 
-.model-delete-btn:hover {
+.model-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+/* Edit ボタン */
+.model-btn--edit {
+    color: #2563eb;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.model-btn--edit:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+/* Dup ボタン（複製） */
+.model-btn--dup {
+    color: #6b7280;
+}
+
+.model-btn--dup:hover {
+    color: #374151;
+}
+
+/* Del ボタン（削除） */
+.model-btn--del {
+    color: #6b7280;
+}
+
+.model-btn--del:hover {
     background: #fff5f5;
     border-color: #fecaca;
     color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, .1) inset;
 }
 
 /* ===== ブロック配置パネル ===== */
@@ -389,9 +411,7 @@
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
+    min-height: 200px;
 }
 
 #libraryPanel .panel-head h2::before {

@@ -2,6 +2,261 @@
    MABEL Studio — UI Components (Buttons, Forms, Modals)
    ========================================================= */
 
+/* =========================================================
+   Tabs — 共通
+   ========================================================= */
+.tabs-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.tabs-nav {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid #eef1f4;
+  overflow-x: auto;
+  padding: 10px 14px 0;
+  background: #f8f9fa;
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+
+.tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  padding: 7px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+  white-space: nowrap;
+  box-shadow: none;
+  letter-spacing: .1px;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+  background: #f0f1f3;
+  transform: none;
+}
+
+.tab-btn.active {
+  color: var(--text);
+  background: #ffffff;
+  border: 1px solid #eef1f4;
+  border-bottom: 1px solid #ffffff;
+  position: relative;
+  z-index: 1;
+}
+
+.tabs-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  min-height: 0;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* =========================================================
+   Editor タブ固有スタイル
+   ========================================================= */
+.editor-tabs {
+  height: 100%;
+}
+
+.editor-tabs .tabs-content {
+  padding: 14px 16px;
+}
+
+/* ラベル後のヒント文字 */
+.field-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+/* タブペイン内のセクション見出し */
+.section-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .2px;
+  text-transform: uppercase;
+  margin: 4px 0 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eef1f4;
+  grid-column: 1 / -1;
+}
+
+/* フォーム区切り線 */
+.form-divider {
+  height: 1px;
+  background: #eef1f4;
+  margin: 6px 0;
+  grid-column: 1 / -1;
+}
+
+/* インラインリスト fieldset の legend */
+.inline-list-legend {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 0 6px;
+}
+
+/* 行追加ボタン */
+.btn-add-row {
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* コードテキストエリア */
+.code-textarea {
+  font-family: var(--mono) !important;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* タブ内ノート */
+.tab-section-note {
+  background: #f4f5f7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* detected inputs hint */
+.editor-inputs-hint {
+  padding: 8px 16px 6px;
+  border-top: 1px solid #eef1f4;
+  background: #fafbfc;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   checkbox-label — チェックボックス付きラベル
+   ========================================================= */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #e6e8eb;
+  background: #fafbfc;
+  transition: background .12s ease, border-color .12s ease;
+  align-self: start;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.checkbox-label:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #2563eb;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* =========================================================
+   モデルモーダル — タブ高さ調整
+   ========================================================= */
+#modelModalBody.modal-body--tabs {
+  height: 54vh;
+  min-height: 400px;
+}
+
+#modelModalBody .tabs-content {
+  padding: 18px 20px;
+}
+
+.model-form.form-grid {
+  grid-template-columns: 160px 1fr;
+  column-gap: 14px;
+  row-gap: 12px;
+}
+
+.model-form.form-grid label {
+  align-self: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.model-form.form-grid input,
+.model-form.form-grid select {
+  height: 38px;
+  border-radius: 8px;
+}
+
+.model-form.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+/* =========================================================
+   v2Settings — アイテムカード（Image/Template/File/Connection）
+   ========================================================= */
+.item-card {
+  border: 1px solid #e6e8eb;
+  border-radius: 12px;
+  padding: 12px 14px 10px;
+  margin-bottom: 10px;
+  background: #fafbfc;
+  grid-column: 1 / -1;
+}
+
+.item-card legend {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1px;
+  text-transform: uppercase;
+  padding: 0 6px;
+  color: var(--muted);
+}
+
+/* =========================================================
+   Modal — バリアント
+   ========================================================= */
+.modal--wide {
+  width: min(1040px, 96vw);
+}
+
+/* タブUI向けモーダルボディ */
+.modal-body--tabs {
+  padding: 0;
+  height: 68vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* Buttons */
 button {
   cursor: pointer;
